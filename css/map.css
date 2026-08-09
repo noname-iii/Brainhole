@@ -1,0 +1,421 @@
+/* 地图视图样式 */
+.map-container {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Part 区域样式 */
+.part-section {
+  margin-bottom: 48px;
+}
+
+.part-header {
+  margin-bottom: 24px;
+  padding: 16px 24px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+.part-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* 学习路径 - 类似 Duolingo 的蛇形路径 */
+.learning-path {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+  padding: 20px 0;
+}
+
+/* 章节节点 - Duolingo 风格 */
+.chapter-node {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 24px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: var(--transition);
+  max-width: 500px;
+  width: 100%;
+  box-shadow: var(--shadow);
+}
+
+.chapter-node:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-lg);
+}
+
+.chapter-node.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chapter-node.locked:hover {
+  transform: none;
+  border-color: var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+.chapter-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+  position: relative;
+  transition: var(--transition);
+}
+
+.chapter-circle.locked {
+  background: #f4f4f5;
+  border: 2px solid var(--border-color);
+}
+
+.chapter-circle.available {
+  background: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.chapter-circle.completed {
+  background: var(--success-color);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.chapter-circle.in-progress {
+  background: var(--accent-color);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.chapter-icon {
+  font-size: 32px;
+}
+
+.chapter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--success-color);
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.chapter-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chapter-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chapter-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chapter-progress .progress-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.chapter-progress .progress-fill {
+  height: 100%;
+  background: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+.chapter-progress .progress-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 章节容器 */
+.chapter-section {
+  margin-bottom: 60px;
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 章节标题 */
+.chapter-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--card-bg), var(--bg-color));
+  border-radius: var(--radius);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+.chapter-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3);
+}
+
+.chapter-info {
+  flex: 1;
+}
+
+.chapter-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.chapter-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.chapter-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chapter-progress-bar {
+  width: 120px;
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.chapter-progress-fill {
+  height: 100%;
+  background: var(--primary-color);
+  transition: width 0.5s ease;
+}
+
+.chapter-progress-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* 关卡网格 */
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 24px;
+  padding: 0 20px;
+}
+
+/* 关卡节点 */
+.module-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.module-node:hover {
+  transform: translateY(-2px);
+}
+
+.module-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  position: relative;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+
+.module-circle.locked {
+  background: #f4f4f5;
+  border: 2px solid var(--border-color);
+  cursor: not-allowed;
+}
+
+.module-circle.available {
+  background: var(--primary-color);
+  animation: pulse 2s infinite;
+}
+
+.module-circle.completed {
+  background: var(--success-color);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.module-node:hover .module-circle.available {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.module-label {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-secondary);
+  max-width: 120px;
+  line-height: 1.4;
+}
+
+.module-node:hover .module-label {
+  color: var(--text-primary);
+}
+
+/* 关卡状态图标 */
+.module-status {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 连接线 */
+.module-connector {
+  position: absolute;
+  width: 40px;
+  height: 4px;
+  background: var(--border-color);
+  top: 50%;
+  right: -20px;
+  transform: translateY(-50%);
+}
+
+.module-connector.completed {
+  background: var(--primary-color);
+}
+
+/* 章节分隔线 */
+.chapter-divider {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+  margin: 40px 0;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state-text {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .map-container {
+    padding: 20px 10px;
+  }
+  
+  .chapter-header {
+    padding: 16px;
+  }
+  
+  .chapter-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+  
+  .chapter-title {
+    font-size: 20px;
+  }
+  
+  .modules-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 16px;
+    padding: 0 10px;
+  }
+  
+  .module-circle {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+  
+  .module-label {
+    font-size: 12px;
+    max-width: 100px;
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "oi-practice-assistant",
+  "version": "1.0.0",
+  "description": "OI 练习助手 - 算法学习之旅",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.oi.assistant",
+    "productName": "OI练习助手",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "target": [
+        "deb"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "files": [
+      "index.html",
+      "main.js",
+      "js/**/*",
+      "css/**/*",
+      "assets/**/*"
+    ]
+  },
+  "allowScripts": {}
+}

@@ -1,0 +1,32 @@
+# Build outputs
+build/
+OI练习助手-独立版/
+*.exe
+*.deb
+*.tar.gz
+*.spec
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Temp files
+*_verify.py
+*_check.py
+*_build*.py
+fix_*.py
+check_*.py
+verify_*.py
+
+# Node
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
