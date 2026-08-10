@@ -39,7 +39,7 @@ const LessonView = {
     if (!lessonData) {
       content.innerHTML = `
         <div class="lesson-card">
-          <h3>📖 ${module.title}</h3>
+          <h3>${module.title}</h3>
           <p>内容正在准备中，请稍后再来...</p>
         </div>
       `;
@@ -48,27 +48,27 @@ const LessonView = {
 
     content.innerHTML = `
       <div class="lesson-card">
-        <h3>🎯 A. 这个算法解决什么问题</h3>
+        <h3>A. 这个算法解决什么问题</h3>
         <div class="lesson-content-text">${this.formatMarkdown(lessonData.problemDesc)}</div>
       </div>
 
       <div class="lesson-card">
-        <h3>💡 B. 这个算法是怎么想的</h3>
+        <h3>B. 这个算法是怎么想的</h3>
         <div class="lesson-content-text">${this.formatMarkdown(lessonData.idea)}</div>
       </div>
 
       <div class="lesson-card">
-        <h3>📐 C. 推导与实现</h3>
+        <h3>C. 推导与实现</h3>
         <div class="lesson-content-text">${this.formatMarkdown(lessonData.derivation)}</div>
       </div>
 
       <div class="lesson-card">
-        <h3>💻 D. 代码实现</h3>
+        <h3>D. 代码实现</h3>
         ${this.createCodeBlock(lessonData.code, 'cpp')}
       </div>
 
       <div class="lesson-card">
-        <h3>🎉 完成学习</h3>
+        <h3>完成学习</h3>
         <p>恭喜你完成了这个算法的学习！接下来让我们通过练习来巩固吧！</p>
         <button class="btn-primary" onclick="LessonView.completeIntro()">完成学习，开始做题 →</button>
       </div>
@@ -102,12 +102,12 @@ const LessonView = {
         </div>
 
         <div class="problem-section">
-          <h4>📝 题目描述</h4>
+          <h4>题目描述</h4>
           <p>${this.formatMarkdown(problem.description)}</p>
         </div>
 
         <div class="problem-section">
-          <h4>📋 样例</h4>
+          <h4>样例</h4>
           ${problem.samples.map((sample, i) => `
             <div class="sample-block">
               <div class="sample-label">样例输入 ${i + 1}</div>
@@ -121,13 +121,13 @@ const LessonView = {
         </div>
 
         <div class="problem-section">
-          <h4>📏 数据范围</h4>
+          <h4>数据范围</h4>
           <p>${problem.constraints}</p>
         </div>
       </div>
 
       <div class="thinking-area">
-        <h4>💭 你的思路</h4>
+        <h4>你的思路</h4>
         <p style="color: var(--text-secondary); margin-bottom: 12px;">
           在写代码之前，先写下你的想法吧！可以是完整的思路，也可以是部分分的策略。
         </p>
@@ -141,10 +141,9 @@ const LessonView = {
       <div id="aiResponseArea"></div>
 
       <div class="lesson-card">
-        <h3>✅ 完成关卡</h3>
+        <h3>完成关卡</h3>
         <p>如果你在洛谷上成功AC了这道题，点击下方按钮完成关卡！</p>
         <button class="btn-ac" id="btnAC" onclick="LessonView.markAC()">
-          <span>🎉</span>
           <span>我AC了！</span>
         </button>
       </div>
@@ -175,12 +174,12 @@ const LessonView = {
     if (result.success) {
       responseArea.innerHTML = `
         <div class="ai-response">
-          <h4>🤖 AI 助手的分析</h4>
+          <h4>AI 助手的分析</h4>
           <div class="ai-response-content">${this.formatMarkdown(result.message)}</div>
         </div>
 
         <div class="followup-area">
-          <h4>💬 继续追问</h4>
+          <h4>继续追问</h4>
           <textarea class="followup-input" id="followupInput" placeholder="有什么不明白的地方吗？可以继续提问..."></textarea>
           <div class="followup-actions">
             <button class="btn-primary" onclick="LessonView.askFollowup()">提问</button>
@@ -191,7 +190,7 @@ const LessonView = {
     } else {
       responseArea.innerHTML = `
         <div class="ai-response">
-          <h4>❌ 分析失败</h4>
+          <h4>分析失败</h4>
           <p>${result.message}</p>
         </div>
       `;
@@ -219,12 +218,12 @@ const LessonView = {
 
     if (result.success) {
       loadingDiv.innerHTML = `
-        <h4>🤖 AI 助手的回答</h4>
+        <h4>AI 助手的回答</h4>
         <div class="ai-response-content">${this.formatMarkdown(result.message)}</div>
       `;
     } else {
       loadingDiv.innerHTML = `
-        <h4>❌ 回答失败</h4>
+        <h4>回答失败</h4>
         <p>${result.message}</p>
       `;
     }
@@ -250,12 +249,12 @@ const LessonView = {
 
     if (result.success) {
       loadingDiv.innerHTML = `
-        <h4>🔧 Debug 结果</h4>
+        <h4>Debug 结果</h4>
         <div class="ai-response-content">${this.formatMarkdown(result.message)}</div>
       `;
     } else {
       loadingDiv.innerHTML = `
-        <h4>❌ Debug 失败</h4>
+        <h4>Debug 失败</h4>
         <p>${result.message}</p>
       `;
     }
@@ -311,12 +310,12 @@ const LessonView = {
     const btn = document.getElementById('btnAC');
     if (btn) {
       btn.classList.add('completed');
-      btn.innerHTML = '<span>✅</span><span>已完成！</span>';
+      btn.innerHTML = '<span>已完成！</span>';
       btn.disabled = true;
     }
 
     // 使用自定义toast替代alert
-    this.showToast('🎉 恭喜你完成了一道题！继续加油！', 'success');
+    this.showToast('恭喜你完成了一道题！继续加油！', 'success');
     
     setTimeout(() => { this.back(); }, 1500);
   },
@@ -441,13 +440,13 @@ const LessonView = {
 
   // 渲染章节概览
   renderChapterOverview(chapter) {
-    let html = '<div class="lesson-card"><h3>' + chapter.icon + ' ' + chapter.title + '</h3>';
+    let html = '<div class="lesson-card"><h3>' + chapter.title + '</h3>';
     html += '<p>' + chapter.description + '</p></div>';
     html += '<div class="modules-grid">';
     chapter.modules.forEach((mod, idx) => {
       const completed = Storage.isCompleted(mod.id);
       const statusClass = completed ? 'completed' : 'available';
-      const statusIcon = completed ? '✅' : (mod.type === 'intro' ? '📖' : '🎯');
+      const statusIcon = completed ? '✓' : (mod.type === 'intro' ? 'A' : (idx + 1));
       html += '<div class="module-node" onclick="LessonView.openModule(\'' + chapter.id + '\', ' + idx + ')">';
       html += '<div class="module-circle ' + statusClass + '"><span>' + statusIcon + '</span></div>';
       html += '<div class="module-label">' + mod.title + '</div>';

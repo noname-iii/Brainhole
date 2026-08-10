@@ -6,6 +6,9 @@ const App = {
     
     // 初始化存储
     Storage.init();
+
+    // 应用主题色
+    this.applyTheme();
     
     // 初始化地图视图
     MapView.init();
@@ -23,6 +26,27 @@ const App = {
     this.updateGlobalProgress();
     
     console.log('应用初始化完成');
+  },
+
+  // 应用主题色
+  applyTheme(color) {
+    const themeColor = color || Storage.getSettings().themeColor || '#6366f1';
+    const root = document.documentElement;
+    root.style.setProperty('--primary-color', themeColor);
+    // 自动生成衍生色
+    const darker = this.adjustColor(themeColor, -20);
+    const lighter = this.adjustColor(themeColor, 30);
+    root.style.setProperty('--primary-dark', darker);
+    root.style.setProperty('--primary-light', lighter);
+  },
+
+  // 调整颜色亮度
+  adjustColor(hex, amount) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+    const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+    const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+    return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
   },
 
   // 绑定全局事件
@@ -69,34 +93,230 @@ const App = {
   showSettings() {
     const modal = document.getElementById('settingsModal');
     modal.classList.add('active');
-    
+
     // 加载当前设置
     const settings = Storage.getSettings();
-    document.getElementById('settingApiUrl').value = settings.apiUrl || '';
+    const providerSelect = document.getElementById('settingProvider');
+    const modelSelect = document.getElementById('settingModel');
+    const aiNameInput = document.getElementById('settingAiName');
+
+    // 设置AI昵称
+    aiNameInput.value = settings.aiName || '';
+
+    // 设置服务商（默认openai）
+    providerSelect.value = settings.provider || 'openai';
+
+    // 填充模型列表
+    this.updateModelList(providerSelect.value);
+
+    // 设置已保存的模型
+    if (settings.model) {
+      setTimeout(() => {
+        modelSelect.value = settings.model;
+      }, 0);
+    }
+
     document.getElementById('settingApiKey').value = settings.apiKey || '';
-    document.getElementById('settingModel').value = settings.model || 'gpt-3.5-turbo';
     document.getElementById('settingLuoguUser').value = settings.luoguUser || '';
-    
+
+    // 设置主题色
+    const themeColorInput = document.getElementById('settingThemeColor');
+    const themeHexSpan = document.getElementById('settingThemeHex');
+    themeColorInput.value = settings.themeColor || '#6366f1';
+    themeHexSpan.textContent = settings.themeColor || '#6366f1';
+    themeColorInput.oninput = () => {
+      themeHexSpan.textContent = themeColorInput.value;
+      this.applyTheme(themeColorInput.value);
+    };
+    document.getElementById('btnResetColor').onclick = () => {
+      themeColorInput.value = '#6366f1';
+      themeHexSpan.textContent = '#6366f1';
+      this.applyTheme('#6366f1');
+    };
+
+    // 服务商切换事件
+    providerSelect.onchange = () => {
+      this.updateModelList(providerSelect.value);
+    };
+
     // 保存按钮
     const saveBtn = document.getElementById('btnSaveSettings');
-    saveBtn.onclick = () => {
+    saveBtn.onclick = async () => {
       const newSettings = {
-        apiUrl: document.getElementById('settingApiUrl').value.trim(),
+        aiName: aiNameInput.value.trim(),
+        provider: providerSelect.value,
         apiKey: document.getElementById('settingApiKey').value.trim(),
-        model: document.getElementById('settingModel').value.trim(),
-        luoguUser: document.getElementById('settingLuoguUser').value.trim()
+        model: modelSelect.value.trim(),
+        luoguUser: document.getElementById('settingLuoguUser').value.trim(),
+        themeColor: document.getElementById('settingThemeColor').value
       };
-      
+
+      // 如果有API配置，验证连接
+      if (newSettings.apiKey && newSettings.model) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = '验证中...';
+        
+        const valid = await this.validateApiConnection(newSettings);
+        
+        if (!valid) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = '保存设置';
+          LessonView.showToast('API 连接失败，请检查配置', 'error');
+          return;
+        }
+        
+        saveBtn.disabled = false;
+        saveBtn.textContent = '保存设置';
+      }
+
       Storage.saveSettings(newSettings);
+      
+      // 更新AI面板标题
+      this.updateAiPanelTitle(newSettings.aiName);
+      
       modal.classList.remove('active');
-      LessonView.showToast('设置已保存！', 'success');
+      LessonView.showToast('设置已保存', 'success');
     };
-    
+
     // 关闭按钮
     const closeBtn = modal.querySelector('.modal-close');
     closeBtn.onclick = () => {
       modal.classList.remove('active');
     };
+  },
+
+  // 验证API连接
+  async validateApiConnection(settings) {
+    const providerConfig = {
+      openai: { url: 'https://api.openai.com/v1/chat/completions' },
+      anthropic: { url: 'https://api.anthropic.com/v1/messages' },
+      google: { url: 'https://generativelanguage.googleapis.com/v1beta/models' },
+      deepseek: { url: 'https://api.deepseek.com/v1/chat/completions' },
+      zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4/chat/completions' },
+      qwen: { url: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
+      baidu: { url: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat' },
+      moonshot: { url: 'https://api.moonshot.cn/v1/chat/completions' },
+      yi: { url: 'https://api.lingyiwanwu.com/v1/chat/completions' },
+      minimax: { url: 'https://api.minimax.chat/v1/text/chatcompletion_pro' },
+      siliconflow: { url: 'https://api.siliconflow.cn/v1/chat/completions' }
+    };
+
+    const config = providerConfig[settings.provider];
+    if (!config) return false;
+
+    try {
+      // 发送测试消息
+      const testMessage = 'Hi';
+      const result = await AI.sendToProvider(settings.provider, testMessage, '', settings.apiKey, settings.model, true);
+      return result.success;
+    } catch (error) {
+      console.error('API验证失败:', error);
+      return false;
+    }
+  },
+
+  // 更新AI面板标题
+  updateAiPanelTitle(aiName) {
+    const panelHeader = document.querySelector('.ai-panel-header h3');
+    if (panelHeader) {
+      const svg = panelHeader.querySelector('svg').outerHTML;
+      panelHeader.innerHTML = svg + ' ' + (aiName || 'AI 学习助手');
+    }
+    
+    // 更新欢迎消息
+    const welcomeDiv = document.querySelector('.ai-welcome');
+    if (welcomeDiv) {
+      const name = aiName || '你的 OI 学习助手';
+      welcomeDiv.innerHTML = `<p>你好！我是${name}</p><p>有任何问题都可以问我哦！</p>`;
+    }
+  },
+
+  // 根据服务商更新模型列表
+  updateModelList(provider) {
+    const modelSelect = document.getElementById('settingModel');
+
+    const providerModels = {
+      openai: [
+        { value: 'gpt-4.1', label: 'GPT-4.1 (v2025-04-14)' },
+        { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini (v2025-04-14)' },
+        { value: 'gpt-4o', label: 'GPT-4o (v2024-08-06)' },
+        { value: 'gpt-4o-mini', label: 'GPT-4o Mini (v2024-07-18)' },
+        { value: 'o3-mini', label: 'o3-mini (v2025-01-31)' },
+        { value: 'o1', label: 'o1 (v2024-12-17)' }
+      ],
+      anthropic: [
+        { value: 'claude-sonnet-4-20250514', label: 'Claude 4 Sonnet (v2025-05-14)' },
+        { value: 'claude-opus-4-20250514', label: 'Claude 4 Opus (v2025-05-14)' },
+        { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (v2024-10-22)' },
+        { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (v2024-10-22)' }
+      ],
+      google: [
+        { value: 'gemini-2.5-pro-preview-03-25', label: 'Gemini 2.5 Pro (Preview)' },
+        { value: 'gemini-2.5-flash-preview-04-17', label: 'Gemini 2.5 Flash (Preview)' },
+        { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (v2025-02-05)' },
+        { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (v2024-05-28)' }
+      ],
+      deepseek: [
+        { value: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro' },
+        { value: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash' },
+        { value: 'DeepSeek-R1', label: 'DeepSeek R1' }
+      ],
+      zhipu: [
+        { value: 'glm-4-plus', label: 'GLM-4 Plus (v2024-11)' },
+        { value: 'glm-4-flash', label: 'GLM-4 Flash (v2024-09)' },
+        { value: 'glm-4-air', label: 'GLM-4 Air (v2024-07)' },
+        { value: 'glm-4-long', label: 'GLM-4 Long (128K)' }
+      ],
+      qwen: [
+        { value: 'qwen-max-latest', label: 'Qwen Max (Latest)' },
+        { value: 'qwen-plus-latest', label: 'Qwen Plus (Latest)' },
+        { value: 'qwen-turbo-latest', label: 'Qwen Turbo (Latest)' },
+        { value: 'qwen-coder-plus-latest', label: 'Qwen Coder Plus (Latest)' }
+      ],
+      baidu: [
+        { value: 'ernie-4.5-8k-preview', label: '文心一言 4.5 (Preview)' },
+        { value: 'ernie-4.0-8k', label: '文心一言 4.0 (v2024-04)' },
+        { value: 'ernie-speed-128k', label: '文心一言 Speed (128K)' }
+      ],
+      moonshot: [
+        { value: 'kimi-latest', label: 'Kimi 3 (kimi-latest)' },
+        { value: 'kimi-2.7-code', label: 'Kimi 2.7 Code' },
+        { value: 'kimi-2.7', label: 'Kimi 2.7' },
+        { value: 'kimi-2.6', label: 'Kimi 2.6' },
+        { value: 'moonshot-v1-8k', label: 'Kimi 8K (Legacy)' }
+      ],
+      yi: [
+        { value: 'yi-large', label: 'Yi Large (v2025-01)' },
+        { value: 'yi-medium', label: 'Yi Medium (v2025-01)' },
+        { value: 'yi-lightning', label: 'Yi Lightning (v2024-09)' }
+      ],
+      minimax: [
+        { value: 'MiniMax-Text-01', label: 'MiniMax Text-01 (v2025-01)' },
+        { value: 'abab6.5s-chat', label: 'MiniMax ABAB 6.5s (v2024-07)' },
+        { value: 'abab6.5-chat', label: 'MiniMax ABAB 6.5 (v2023-12)' }
+      ],
+      siliconflow: [
+        { value: 'Qwen/Qwen3-235B-A22B', label: 'Qwen3 235B (v2025-04)' },
+        { value: 'deepseek-ai/DeepSeek-R1', label: 'DeepSeek R1' },
+        { value: 'deepseek-ai/DeepSeek-V3', label: 'DeepSeek V3 (v2024-12)' },
+        { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B (v2024-09)' }
+      ],
+      custom: []
+    };
+
+    const models = providerModels[provider] || [];
+    modelSelect.innerHTML = '';
+    
+    if (models.length === 0) {
+      modelSelect.innerHTML = '<option value="">自定义模型</option>';
+    } else {
+      models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.value;
+        option.textContent = model.label;
+        modelSelect.appendChild(option);
+      });
+    }
   },
 
   // 显示统计弹窗
@@ -110,47 +330,47 @@ const App = {
     body.innerHTML = `
       <div class="stats-content">
         <div class="stat-card">
-          <div class="stat-icon">📚</div>
+          <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></div>
           <div class="stat-info">
             <div class="stat-value">${stats.totalChapters}</div>
             <div class="stat-label">总章节数</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
-          <div class="stat-icon">✅</div>
+          <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
           <div class="stat-info">
             <div class="stat-value">${stats.completedChapters}</div>
             <div class="stat-label">已完成章节</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
-          <div class="stat-icon">🎯</div>
+          <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></div>
           <div class="stat-info">
             <div class="stat-value">${stats.totalModules}</div>
             <div class="stat-label">总关卡数</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
-          <div class="stat-icon">🏆</div>
+          <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg></div>
           <div class="stat-info">
             <div class="stat-value">${stats.completedModules}</div>
             <div class="stat-label">已完成关卡</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
-          <div class="stat-icon">📊</div>
+          <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
           <div class="stat-info">
             <div class="stat-value">${stats.completionRate}%</div>
             <div class="stat-label">完成率</div>
           </div>
         </div>
-        
+
         <div class="stat-card">
-          <div class="stat-icon">⏱️</div>
+          <div class="stat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
           <div class="stat-info">
             <div class="stat-value">${stats.studyTime}h</div>
             <div class="stat-label">学习时长</div>

@@ -1,61 +1,217 @@
 // AI 助手功能
 const AI = {
-  // 发送消息到AI
-  async sendMessage(message, context = '') {
-    const settings = Storage.getSettings();
-    
-    if (!settings.apiKey || !settings.apiUrl) {
-      return {
-        success: false,
-        message: '请先在设置中配置 AI API 地址和密钥'
-      };
-    }
+  // 各厂商 API URL 映射
+  providerUrls: {
+    openai: 'https://api.openai.com/v1/chat/completions',
+    anthropic: 'https://api.anthropic.com/v1/messages',
+    google: 'https://generativelanguage.googleapis.com/v1beta/models',
+    deepseek: 'https://api.deepseek.com/v1/chat/completions',
+    zhipu: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+    qwen: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+    baidu: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat',
+    moonshot: 'https://api.moonshot.cn/v1/chat/completions',
+    yi: 'https://api.lingyiwanwu.com/v1/chat/completions',
+    minimax: 'https://api.minimax.chat/v1/text/chatcompletion_pro',
+    siliconflow: 'https://api.siliconflow.cn/v1/chat/completions'
+  },
 
+  // 获取系统提示词
+  getSystemPrompt(context) {
+    const settings = Storage.getSettings();
+    const aiName = settings.aiName || 'AI 学习助手';
+    return `你是一位热情洋溢、充满活力的 OI 学习助手，名字叫"${aiName}"，专门帮助初二学生学习算法和编程。
+
+## 你的核心特点
+
+**用户画像**
+- 用户是一位初二学生，正在学习信息学竞赛（OI）
+- 学生可能刚接触算法不久，对复杂概念需要循序渐进的讲解
+- 学生可能会遇到困难和挫折，需要你的鼓励和支持
+
+**回答风格**
+- 热情生动：用充满活力的语言，让学习变得有趣
+- 准确严谨：保证知识的正确性，但用通俗易懂的方式表达
+- 灵活调整：不要过于坚持自己的想法，要根据学生的实际情况调整思路
+- 多鼓励少批评：让学生保持学习热情，建立信心
+
+**代码规范**
+- 如果涉及代码，使用 C++ 并添加详细注释
+- 解释代码时要逐行或逐块说明，确保学生能理解
+- 给出代码前先解释思路，让学生知道为什么要这样写
+
+**当前学习的内容**
+${context || '学生正在学习 OI 相关知识'}`;
+  },
+
+  // 获取服务商 API URL
+  getProviderUrl(provider) {
+    return this.providerUrls[provider] || this.providerUrls.openai;
+  },
+
+  // 发送到指定提供商
+  async sendToProvider(provider, message, context, apiKey, model, isValidation = false) {
+    const systemPrompt = this.getSystemPrompt(context);
+    const apiUrl = this.getProviderUrl(provider);
+
+    switch (provider) {
+      case 'anthropic':
+        return await this.sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation);
+      case 'google':
+        return await this.sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation);
+      case 'baidu':
+        return await this.sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation);
+      default:
+        return await this.sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation);
+    }
+  },
+
+  // 发送到 OpenAI 兼容接口
+  async sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation) {
     try {
-      const response = await fetch(settings.apiUrl, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.apiKey}`
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: settings.model || 'gpt-4o-mini',
+          model: model,
           messages: [
-            {
-              role: 'system',
-              content: `你是一个友好的OI（信息学竞赛）学习助手，专门帮助初中学生学习算法和编程。请用生动、有趣、易懂的语言回答问题。如果涉及代码，请使用C++并添加详细注释。当前学习的内容：${context}`
-            },
-            {
-              role: 'user',
-              content: message
-            }
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message }
           ],
           temperature: 0.7,
-          max_tokens: 2000
+          max_tokens: isValidation ? 50 : 2000
         })
       });
 
       if (!response.ok) {
-        throw new Error(`API 请求失败: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
-      return {
-        success: true,
-        message: data.choices[0].message.content
-      };
+      return { success: true, message: data.choices[0].message.content };
     } catch (error) {
-      return {
-        success: false,
-        message: `AI 请求失败: ${error.message}`
-      };
+      return { success: false, message: `AI 请求失败: ${error.message}` };
     }
+  },
+
+  // 发送到 Anthropic (Claude)
+  async sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: model,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: message }],
+          max_tokens: isValidation ? 50 : 2000
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { success: true, message: data.content[0].text };
+    } catch (error) {
+      return { success: false, message: `AI 请求失败: ${error.message}` };
+    }
+  },
+
+  // 发送到 Google (Gemini)
+  async sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
+    try {
+      const url = `${apiUrl}/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            role: 'user',
+            parts: [{ text: `${systemPrompt}\n\n用户问题：${message}` }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: isValidation ? 50 : 2000
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { success: true, message: data.candidates[0].content.parts[0].text };
+    } catch (error) {
+      return { success: false, message: `AI 请求失败: ${error.message}` };
+    }
+  },
+
+  // 发送到百度文心一言
+  async sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
+    try {
+      // 百度使用特殊的请求格式，先获取 access_token
+      const tokenUrl = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=`;
+      const tokenRes = await fetch(tokenUrl);
+      const tokenData = await tokenRes.json();
+      if (!tokenData.access_token) {
+        throw new Error('百度 access_token 获取失败，请检查 API Key');
+      }
+
+      const chatUrl = `${apiUrl}/${model}?access_token=${tokenData.access_token}`;
+      const response = await fetch(chatUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+      }
+
+      const data = await response.json();
+      return { success: true, message: data.result };
+    } catch (error) {
+      return { success: false, message: `AI 请求失败: ${error.message}` };
+    }
+  },
+
+  // 发送消息到AI（主入口）
+  async sendMessage(message, context = '') {
+    const settings = Storage.getSettings();
+
+    if (!settings.apiKey) {
+      return { success: false, message: '请先在设置中配置 AI API 密钥' };
+    }
+    if (!settings.model) {
+      return { success: false, message: '请先在设置中选择 AI 模型' };
+    }
+
+    const provider = settings.provider || 'openai';
+    return await this.sendToProvider(provider, message, context, settings.apiKey, settings.model, false);
   },
 
   // 分析用户思路
   async analyzeThinking(userThinking, problemContext) {
-    const prompt = `
-学生正在解决一道OI题目，请分析学生的思路：
+    const prompt = `学生正在解决一道OI题目，请分析学生的思路：
 
 题目背景：
 ${problemContext}
@@ -70,16 +226,13 @@ ${userThinking}
 4. 如果思路可行，详细解释如何完善
 5. 如果思路不可行，温和地引导到正确方向
 
-请用生动、鼓励的语言回答，适合初中学生理解。
-`;
-
+请用生动、鼓励的语言回答，适合初中学生理解。`;
     return await this.sendMessage(prompt, problemContext);
   },
 
   // 帮助debug
   async helpDebug(code, errorMsg) {
-    const prompt = `
-学生在写代码时遇到了问题，请帮助debug：
+    const prompt = `学生在写代码时遇到了问题，请帮助debug：
 
 代码：
 ${code}
@@ -93,9 +246,7 @@ ${errorMsg || '无'}
 3. 给出修正后的代码
 4. 用简单易懂的语言解释
 
-请用生动、耐心的语言回答。
-`;
-
+请用生动、耐心的语言回答。`;
     return await this.sendMessage(prompt);
   },
 
@@ -108,21 +259,43 @@ ${errorMsg || '无'}
 4. 时间复杂度是多少
 
 请用生动有趣的例子，适合初中学生理解。`;
-
     return await this.sendMessage(prompt);
   }
 };
 
 
-// AI助手面板交互（供app.js调用）
+// AI助手面板交互
 const AIAssistant = {
   init() {
-    console.log('AI助手初始化完成');
     this.bindEvents();
+    this.restoreAiName();
   },
+
+  // 恢复AI名称
+  restoreAiName() {
+    const settings = Storage.getSettings();
+    if (settings.aiName) {
+      this.updateTitle(settings.aiName);
+    }
+  },
+
+  // 更新面板标题
+  updateTitle(aiName) {
+    const panelHeader = document.querySelector('.ai-panel-header h3');
+    if (panelHeader) {
+      const svg = panelHeader.querySelector('svg');
+      if (svg) {
+        panelHeader.innerHTML = svg.outerHTML + ' ' + (aiName || 'AI 学习助手');
+      }
+    }
+    const welcomeEl = document.querySelector('.ai-welcome p:first-child');
+    if (welcomeEl) {
+      welcomeEl.textContent = '你好！我是' + (aiName || '你的 OI 学习助手');
+    }
+  },
+
   bindEvents() {
     const fab = document.getElementById('aiFab');
-    const panel = document.getElementById('aiPanel');
     const closeBtn = document.getElementById('aiClose');
     const sendBtn = document.getElementById('aiSend');
     const input = document.getElementById('aiInput');
@@ -136,32 +309,61 @@ const AIAssistant = {
       }
     });
   },
+
   toggle() {
     const panel = document.getElementById('aiPanel');
     if (panel) panel.classList.toggle('active');
   },
+
   close() {
     const panel = document.getElementById('aiPanel');
     if (panel) panel.classList.remove('active');
   },
+
   async send() {
     const input = document.getElementById('aiInput');
     const messages = document.getElementById('aiMessages');
     if (!input || !messages) return;
     const text = input.value.trim();
     if (!text) return;
+
+    // 添加用户消息
     const userMsg = document.createElement('div');
     userMsg.className = 'chat-message user';
-    userMsg.innerHTML = '<div class="chat-bubble">' + text + '</div>';
+    userMsg.innerHTML = '<div class="chat-bubble">' + this.escapeHtml(text) + '</div>';
     messages.appendChild(userMsg);
     input.value = '';
     messages.scrollTop = messages.scrollHeight;
+
+    // 添加加载指示器
+    const loadingMsg = document.createElement('div');
+    loadingMsg.className = 'chat-message assistant';
+    loadingMsg.innerHTML = '<div class="chat-bubble"><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>';
+    messages.appendChild(loadingMsg);
+    messages.scrollTop = messages.scrollHeight;
+
     const result = await AI.sendMessage(text);
+    loadingMsg.remove();
+
+    // 添加AI回复
     const aiMsg = document.createElement('div');
     aiMsg.className = 'chat-message assistant';
-    const bubbleContent = result.success ? marked.parse(result.message) : result.message;
-    aiMsg.innerHTML = '<div class="chat-bubble">' + bubbleContent + '</div>';
+    if (result.success) {
+      try {
+        aiMsg.innerHTML = '<div class="chat-bubble">' + marked.parse(result.message) + '</div>';
+      } catch(e) {
+        aiMsg.innerHTML = '<div class="chat-bubble">' + this.escapeHtml(result.message).replace(/\n/g, '<br>') + '</div>';
+      }
+    } else {
+      aiMsg.innerHTML = '<div class="chat-bubble" style="color:var(--error-color)">' + result.message + '</div>';
+    }
     messages.appendChild(aiMsg);
     messages.scrollTop = messages.scrollHeight;
+  },
+
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 };

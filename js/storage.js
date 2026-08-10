@@ -47,10 +47,12 @@ const Storage = {
   getSettings() {
     const data = localStorage.getItem('oi_settings');
     return data ? JSON.parse(data) : {
-      apiUrl: '',
+      aiName: '',
+      provider: 'openai',
       apiKey: '',
       model: 'gpt-4o-mini',
-      luoguUser: ''
+      luoguUser: '',
+      themeColor: '#6366f1'
     };
   },
 

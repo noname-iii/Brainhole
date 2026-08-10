@@ -314,7 +314,7 @@ const Luogu = {
       id: problemId,
       title: `题目 ${problemId}`,
       difficulty: 3,
-      description: `这是洛谷题目 ${problemId}。\n\n**题目详情：**\n由于网络原因，题目详情暂时无法自动加载。\n\n**如何查看题目：**\n1. 点击下方"去洛谷查看"按钮，直接跳转到洛谷题目页面\n2. 在洛谷上查看完整的题目描述、样例和数据范围\n3. 完成题目后，回到这里点击"我AC了"按钮完成关卡\n\n💡 **提示：** 配置好 AI API 后，可以在做题过程中随时向 AI 助手提问，获取解题思路和指导。`,
+      description: `这是洛谷题目 ${problemId}。\n\n**题目详情：**\n由于网络原因，题目详情暂时无法自动加载。\n\n**如何查看题目：**\n1. 点击下方"去洛谷查看"按钮，直接跳转到洛谷题目页面\n2. 在洛谷上查看完整的题目描述、样例和数据范围\n3. 完成题目后，回到这里点击"我AC了"按钮完成关卡\n\n**提示：** 配置好 AI API 后，可以在做题过程中随时向 AI 助手提问，获取解题思路和指导。`,
       samples: [],
       constraints: '详见洛谷题目页面'
     };
@@ -334,7 +334,16 @@ const Luogu = {
       overlay.className = 'ac-confirm-overlay';
       overlay.innerHTML = `
         <div class="ac-confirm-dialog">
-          <div class="ac-confirm-icon">🏆</div>
+          <div class="ac-confirm-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"></path>
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"></path>
+              <path d="M4 22h16"></path>
+              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+            </svg>
+          </div>
           <h3>确认完成</h3>
           <p>你已经在洛谷上成功提交了 <strong>${problemId}</strong> 并获得了AC吗？</p>
           <div class="ac-confirm-buttons">
