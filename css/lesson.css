@@ -183,6 +183,8 @@
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .problem-title {
@@ -190,13 +192,76 @@
   font-weight: 700;
 }
 
+.problem-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .problem-id {
   padding: 4px 12px;
   background: var(--primary-color);
   color: white;
   border-radius: 16px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+}
+
+/* 难度标签 - 与洛谷官方颜色系统一致 */
+.problem-difficulty {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 洛谷官方难度颜色：
+   0=未评定(灰), 1=入门(灰), 2=普及-(红), 3=普及(橙), 4=普及+(黄),
+   5=提高-(绿), 6=提高(蓝), 7=省选/NOI/CTSC(紫/黑)
+*/
+.difficulty-0 { background: #f3f4f6; color: #9ca3af; }  /* 未评定 */
+.difficulty-1 { background: #f3f4f6; color: #6b7280; }  /* 入门 灰 */
+.difficulty-2 { background: #fef2f2; color: #dc2626; }  /* 普及- 红 */
+.difficulty-3 { background: #fff7ed; color: #ea580c; }  /* 普及 橙 */
+.difficulty-4 { background: #fefce8; color: #ca8a04; }  /* 普及+ 黄 */
+.difficulty-5 { background: #f0fdf4; color: #16a34a; }  /* 提高- 绿 */
+.difficulty-6 { background: #eff6ff; color: #2563eb; }  /* 提高 蓝 */
+.difficulty-7 { background: #f5f3ff; color: #7c3aed; }  /* 省选/NOI 紫 */
+
+/* 题目加载提示 */
+.fetch-notice {
+  text-align: center;
+  padding: 24px 16px;
+  background: var(--bg-color);
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+}
+
+.fetch-notice p {
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.btn-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-retry:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .problem-section {
@@ -214,6 +279,16 @@
   font-size: 15px;
   line-height: 1.8;
   color: var(--text-secondary);
+}
+
+/* 题目中的图片自适应 */
+.problem-section img,
+.lesson-content-text img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 12px 0;
+  display: block;
 }
 
 /* 样例输入输出 */

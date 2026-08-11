@@ -1,32 +1,42 @@
-# Build outputs
-build/
-OI练习助手-独立版/
-*.exe
-*.deb
-*.tar.gz
-*.spec
-
-# Python cache
-__pycache__/
+# Temp/backup files
+*.bak
 *.pyc
-*.pyo
+__pycache__/
+*.tmp
+~$*
 
-# Temp files
-*_verify.py
-*_check.py
-*_build*.py
-fix_*.py
-check_*.py
-verify_*.py
+# Build/test scripts (not needed at runtime)
+test_fetch*.py
+fix_cache.js
+fix_commas.py
+fix_paths.py
+patch_select.py
+expand_pool.py
+expand_pool2.py
+expand_all.py
+expand_hard.py
+expand_hard2.py
+extract_ids.py
+analyze_full.js
+analyze_dup.js
+analyze_dup2.js
+analyze_pool.py
 
-# Node
+# Fetch scripts (not needed at runtime)
+fetch_luogu.py
+fetch_luogu_curl.py
+fetch_luogu_selenium.py
+batch_fetch.py
+
+# Large data files (regenerate as needed)
+luogu_data.json
+luogu_fetched.json
+fetch_progress.json
+problem_ids.txt
+
+# Source docx
+题目.docx
+
+# Build tool (keep if needed for distribution)
+# build.py can stay
 node_modules/
-package-lock.json
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db

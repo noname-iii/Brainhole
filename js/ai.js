@@ -65,9 +65,27 @@ ${context || '学生正在学习 OI 相关知识'}`;
     }
   },
 
+  // 通用超时包装器（Promise.race 安全网）
+  async _withTimeout(promise, timeoutMs) {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new DOMException('整体操作超时', 'TimeoutError')), timeoutMs);
+    });
+    try {
+      const result = await Promise.race([promise, timeoutPromise]);
+      clearTimeout(timeoutId);
+      return result;
+    } catch (e) {
+      clearTimeout(timeoutId);
+      throw e;
+    }
+  },
+
   // 发送到 OpenAI 兼容接口
   async sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation) {
-    try {
+    const fetchTimeout = isValidation ? 12000 : 45000;  // 验证12s，正常45s
+    const totalTimeout = fetchTimeout + 5000;            // 整体多5s缓冲
+    const operation = async () => {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -82,7 +100,8 @@ ${context || '学生正在学习 OI 相关知识'}`;
           ],
           temperature: 0.7,
           max_tokens: isValidation ? 50 : 2000
-        })
+        }),
+        signal: AbortSignal.timeout(fetchTimeout)
       });
 
       if (!response.ok) {
@@ -91,15 +110,30 @@ ${context || '学生正在学习 OI 相关知识'}`;
       }
 
       const data = await response.json();
-      return { success: true, message: data.choices[0].message.content };
+      const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (!content) {
+        console.warn('API 返回空内容，完整响应:', JSON.stringify(data));
+        throw new Error('AI 返回了空内容，请检查模型是否可用或API Key是否有效');
+      }
+      return { success: true, message: content };
+    };
+
+    try {
+      return await this._withTimeout(operation(), totalTimeout);
     } catch (error) {
+      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+        return { success: false, message: '请求超时，请稍后重试（可缩短思路或换用更快的模型）' };
+      }
+      console.error('API 请求异常:', error);
       return { success: false, message: `AI 请求失败: ${error.message}` };
     }
   },
 
   // 发送到 Anthropic (Claude)
   async sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
-    try {
+    const fetchTimeout = isValidation ? 12000 : 45000;
+    const totalTimeout = fetchTimeout + 5000;
+    const operation = async () => {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -113,7 +147,8 @@ ${context || '学生正在学习 OI 相关知识'}`;
           system: systemPrompt,
           messages: [{ role: 'user', content: message }],
           max_tokens: isValidation ? 50 : 2000
-        })
+        }),
+        signal: AbortSignal.timeout(fetchTimeout)
       });
 
       if (!response.ok) {
@@ -122,15 +157,29 @@ ${context || '学生正在学习 OI 相关知识'}`;
       }
 
       const data = await response.json();
-      return { success: true, message: data.content[0].text };
+      const content = data.content && data.content[0] && data.content[0].text;
+      if (!content) {
+        console.warn('Anthropic 返回空内容:', JSON.stringify(data));
+        throw new Error('Claude 返回了空内容，请检查模型配置');
+      }
+      return { success: true, message: content };
+    };
+
+    try {
+      return await this._withTimeout(operation(), totalTimeout);
     } catch (error) {
+      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+        return { success: false, message: '请求超时，请稍后重试（可缩短思路或换用更快的模型）' };
+      }
       return { success: false, message: `AI 请求失败: ${error.message}` };
     }
   },
 
   // 发送到 Google (Gemini)
   async sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
-    try {
+    const fetchTimeout = isValidation ? 12000 : 45000;
+    const totalTimeout = fetchTimeout + 5000;
+    const operation = async () => {
       const url = `${apiUrl}/${model}:generateContent?key=${apiKey}`;
       const response = await fetch(url, {
         method: 'POST',
@@ -144,7 +193,8 @@ ${context || '学生正在学习 OI 相关知识'}`;
             temperature: 0.7,
             maxOutputTokens: isValidation ? 50 : 2000
           }
-        })
+        }),
+        signal: AbortSignal.timeout(fetchTimeout)
       });
 
       if (!response.ok) {
@@ -153,18 +203,36 @@ ${context || '学生正在学习 OI 相关知识'}`;
       }
 
       const data = await response.json();
-      return { success: true, message: data.candidates[0].content.parts[0].text };
+      const content = data.candidates && data.candidates[0] && data.candidates[0].content &&
+                      data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
+                      data.candidates[0].content.parts[0].text;
+      if (!content) {
+        console.warn('Gemini 返回空内容:', JSON.stringify(data));
+        throw new Error('Gemini 返回了空内容，请检查模型配置');
+      }
+      return { success: true, message: content };
+    };
+
+    try {
+      return await this._withTimeout(operation(), totalTimeout);
     } catch (error) {
+      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+        return { success: false, message: '请求超时，请稍后重试（可缩短思路或换用更快的模型）' };
+      }
       return { success: false, message: `AI 请求失败: ${error.message}` };
     }
   },
 
   // 发送到百度文心一言
   async sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
-    try {
-      // 百度使用特殊的请求格式，先获取 access_token
+    const fetchTimeout = isValidation ? 12000 : 45000;
+    const totalTimeout = fetchTimeout + 8000;  // 百度需要额外获取token，多给缓冲
+    const operation = async () => {
+      const signal = AbortSignal.timeout(fetchTimeout);
+
+      // 获取 access_token
       const tokenUrl = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=`;
-      const tokenRes = await fetch(tokenUrl);
+      const tokenRes = await fetch(tokenUrl, { signal });
       const tokenData = await tokenRes.json();
       if (!tokenData.access_token) {
         throw new Error('百度 access_token 获取失败，请检查 API Key');
@@ -179,7 +247,8 @@ ${context || '学生正在学习 OI 相关知识'}`;
             { role: 'system', content: systemPrompt },
             { role: 'user', content: message }
           ]
-        })
+        }),
+        signal
       });
 
       if (!response.ok) {
@@ -188,8 +257,18 @@ ${context || '学生正在学习 OI 相关知识'}`;
       }
 
       const data = await response.json();
+      if (!data.result) {
+        throw new Error('百度返回为空，请检查模型配置');
+      }
       return { success: true, message: data.result };
+    };
+
+    try {
+      return await this._withTimeout(operation(), totalTimeout);
     } catch (error) {
+      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+        return { success: false, message: '请求超时，请稍后重试（可缩短思路或换用更快的模型）' };
+      }
       return { success: false, message: `AI 请求失败: ${error.message}` };
     }
   },
@@ -349,11 +428,8 @@ const AIAssistant = {
     const aiMsg = document.createElement('div');
     aiMsg.className = 'chat-message assistant';
     if (result.success) {
-      try {
-        aiMsg.innerHTML = '<div class="chat-bubble">' + marked.parse(result.message) + '</div>';
-      } catch(e) {
-        aiMsg.innerHTML = '<div class="chat-bubble">' + this.escapeHtml(result.message).replace(/\n/g, '<br>') + '</div>';
-      }
+      const formatted = this.formatMarkdown(result.message);
+      aiMsg.innerHTML = '<div class="chat-bubble">' + formatted + '</div>';
     } else {
       aiMsg.innerHTML = '<div class="chat-bubble" style="color:var(--error-color)">' + result.message + '</div>';
     }
@@ -365,5 +441,24 @@ const AIAssistant = {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  },
+
+  // 格式化Markdown（兼容异步版本marked）
+  formatMarkdown(text) {
+    if (!text) return '';
+    try {
+      const result = marked.parse(text);
+      if (result && typeof result.then === 'function') {
+        // marked >=12 异步版本，用简单替换兜底
+        return text
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/\n/g, '<br>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/`([^`]*)`/g, '<code>$1</code>');
+      }
+      return String(result);
+    } catch(e) {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    }
   }
 };

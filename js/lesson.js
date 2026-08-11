@@ -93,19 +93,27 @@ const LessonView = {
     `;
 
     const problem = await Luogu.getProblem(module.luoguId);
+    const diffLabel = this.getDifficultyLabel(problem.difficulty);
+    
+    const problemCardId = 'problemCard_' + module.id;
 
+    // 直接显示本地缓存数据，不尝试网络加载
     content.innerHTML = `
-      <div class="problem-card">
+      <div class="problem-card" id="${problemCardId}">
         <div class="problem-header">
           <div class="problem-title">${problem.title}</div>
-          <div class="problem-id">${problem.id}</div>
+          <div class="problem-meta">
+            <span class="problem-difficulty difficulty-${problem.difficulty}" title="难度等级">${diffLabel}</span>
+            <span class="problem-id">${problem.id}</span>
+          </div>
         </div>
 
         <div class="problem-section">
           <h4>题目描述</h4>
-          <p>${this.formatMarkdown(problem.description)}</p>
+          <div class="lesson-content-text">${this.formatMarkdown(problem.description)}</div>
         </div>
 
+        ${problem.samples && problem.samples.length > 0 ? `
         <div class="problem-section">
           <h4>样例</h4>
           ${problem.samples.map((sample, i) => `
@@ -119,10 +127,19 @@ const LessonView = {
             </div>
           `).join('')}
         </div>
+        ` : ''}
 
+        ${problem.constraints && problem.constraints !== '详见洛谷题目页面' ? `
         <div class="problem-section">
-          <h4>数据范围</h4>
-          <p>${problem.constraints}</p>
+          <h4>数据范围与提示</h4>
+          <div class="lesson-content-text">${this.formatMarkdown(problem.constraints)}</div>
+        </div>
+        ` : ''}
+
+        <div style="margin-top:12px;text-align:right;">
+          <a href="https://www.luogu.com.cn/problem/${module.luoguId}" target="_blank" class="btn-link" style="color:var(--primary-color);font-size:13px;">
+            在洛谷查看原题
+          </a>
         </div>
       </div>
 
@@ -148,6 +165,103 @@ const LessonView = {
         </button>
       </div>
     `;
+
+    // 恢复用户思路草稿
+    this.restoreThinkingDraft(module.id);
+
+    // 渲染 LaTeX 数学公式
+    this.renderLatex(content);
+  },
+
+  // 获取难度标签（与洛谷官方一致的颜色标签系统）
+  // 洛谷难度：1=入门(灰), 2=普及-(红), 3=普及(橙), 4=普及+(黄), 5=提高-(绿), 6=提高(蓝), 7=省选/NOI(紫)
+  getDifficultyLabel(diff) {
+    const labels = {
+      0: '未评定',
+      1: '入门',
+      2: '普及-',
+      3: '普及',
+      4: '普及+',
+      5: '提高-',
+      6: '提高',
+      7: '省选'
+    };
+    return labels[diff] || '未知';
+  },
+
+  // 重试加载题目
+  async retryProblem(moduleId, problemId) {
+    const card = document.querySelector(`#${CSS.escape('problemCard_' + moduleId)} .fetch-notice`);
+    if (card) {
+      card.innerHTML = '<div class="loading" style="width:20px;height:20px;display:inline-block;margin-right:8px;"></div><p>正在加载...</p>';
+    }
+    const result = await Luogu.retryLoad(problemId);
+    if (result.success && result.problem && result.problem.description) {
+      this.updateProblemCard('problemCard_' + moduleId, result.problem);
+    } else {
+      if (card) {
+        card.innerHTML = `
+          <p style="color:var(--error-color);">加载失败，请稍后重试或直接前往洛谷查看</p>
+          <button class="btn-secondary btn-retry" onclick="LessonView.retryProblem('${moduleId}', '${problemId}')">重新加载</button>
+          <a href="https://www.luogu.com.cn/problem/${problemId}" target="_blank" class="btn-link" style="margin-left:8px;color:var(--primary-color);">去洛谷查看</a>
+        `;
+      }
+    }
+  },
+
+  // 更新题目卡片内容（后台获取成功后刷新）
+  updateProblemCard(cardId, problem) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
+    // 更新难度
+    const diffEl = card.querySelector('.problem-difficulty');
+    if (diffEl) {
+      diffEl.textContent = this.getDifficultyLabel(problem.difficulty);
+      diffEl.className = 'problem-difficulty difficulty-' + problem.difficulty;
+    }
+
+    // 更新描述（包括从占位符状态更新）
+    const descSection = card.querySelector('.problem-section .fetch-notice') || 
+                        card.querySelector('.problem-section .lesson-content-text');
+    if (descSection && problem.description && 
+        !problem.description.includes('加载中') && 
+        !problem.description.includes('详见洛谷')) {
+      descSection.outerHTML = '<div class="lesson-content-text">' + this.formatMarkdown(problem.description) + '</div>';
+    }
+
+    // 更新数据范围
+    const constraintsSection = card.querySelector('.problem-section:last-child p');
+    if (constraintsSection && problem.constraints && problem.constraints !== '详见洛谷题目页面') {
+      constraintsSection.textContent = problem.constraints;
+    }
+  },
+
+  // 保存思路草稿
+  saveThinkingDraft(moduleId, text) {
+    if (text.trim()) {
+      localStorage.setItem('oi_thinking_' + moduleId, text);
+    } else {
+      localStorage.removeItem('oi_thinking_' + moduleId);
+    }
+  },
+
+  // 恢复思路草稿
+  restoreThinkingDraft(moduleId) {
+    const saved = localStorage.getItem('oi_thinking_' + moduleId);
+    const textarea = document.getElementById('thinkingInput');
+    if (textarea && saved) {
+      textarea.value = saved;
+    }
+    // 绑定自动保存事件
+    if (textarea) {
+      // 移除旧监听器（通过克隆替换）
+      const newTextarea = textarea.cloneNode(true);
+      textarea.parentNode.replaceChild(newTextarea, textarea);
+      newTextarea.addEventListener('input', () => {
+        this.saveThinkingDraft(moduleId, newTextarea.value);
+      });
+    }
   },
 
   // 分析用户思路
@@ -371,14 +485,18 @@ const LessonView = {
   // 格式化Markdown（兼容同步和异步）
   formatMarkdown(text) {
     if (!text) return '';
-    // marked v12+ 默认返回 Promise，使用 marked.parseInline 或配置同步模式
-    if (typeof marked.parse === 'function') {
-      const result = marked.parse(text);
-      // 如果返回 Promise，则先用简单替换
-      if (result && typeof result.then === 'function') {
-        return this.simpleMarkdown(text);
+    try {
+      // marked v12+ 默认返回 Promise
+      if (typeof marked.parse === 'function') {
+        const result = marked.parse(text);
+        if (result && typeof result.then === 'function') {
+          // 异步版本，用简单替换兜底
+          return this.simpleMarkdown(text);
+        }
+        return String(result);
       }
-      return result;
+    } catch(e) {
+      console.warn('marked.parse 出错，使用简单格式化:', e);
     }
     return this.simpleMarkdown(text);
   },
@@ -387,14 +505,34 @@ const LessonView = {
   simpleMarkdown(text) {
     if (!text) return '';
     return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/\n/g, '<br>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/^- (.*?)(<br>|$)/g, '<li>$1</li>')
-      .replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>')
-      .replace(/### (.*?)(<br>|$)/g, '<h3>$1</h3>')
-      .replace(/## (.*?)(<br>|$)/g, '<h2>$1</h2>');
+      .replace(/^- (.*?)(<br>|$)/gm, '<li>$1</li>')
+      .replace(/(<li>.*?<\/li>)+/gs, '<ul>$&</ul>')
+      .replace(/^### (.*?)(<br>|$)/gm, '<h3>$1</h3>')
+      .replace(/^## (.*?)(<br>|$)/gm, '<h2>$1</h2>');
+  },
+
+  // 渲染 LaTeX 数学公式（使用 KaTeX）
+  renderLatex(container) {
+    if (typeof renderMathInElement === 'function') {
+      try {
+        renderMathInElement(container, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+      } catch(e) {
+        console.warn('KaTeX render error:', e);
+      }
+    }
   },
 
   // 创建代码块
