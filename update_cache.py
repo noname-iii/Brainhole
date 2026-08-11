@@ -1,5 +1,5 @@
 """使用爬取到的完整数据更新 problem_cache.js"""
-import json
+import json, os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FETCHED_PATH = f'{BASE_DIR}/luogu_fetched.json'
