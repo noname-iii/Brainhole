@@ -288,25 +288,107 @@ ${context || '学生正在学习 OI 相关知识'}`;
     return await this.sendToProvider(provider, message, context, settings.apiKey, settings.model, false);
   },
 
-  // 分析用户思路
+  // 分析用户思路（苏格拉底式引导 - 不直接给答案）
   async analyzeThinking(userThinking, problemContext) {
-    const prompt = `学生正在解决一道OI题目，请分析学生的思路：
+    const prompt = `你是一位OI奥赛金牌教练，正在辅导一位初二学生。学生正在解决一道OI题目。你的任务不是直接告诉学生答案，而是像苏格拉底一样，通过提问一步步引导学生自己发现正解。
 
-题目背景：
+## 题目背景
 ${problemContext}
 
-学生的思路：
+## 学生的思路
 ${userThinking}
 
-请：
-1. 分析学生思路的正确性
-2. 指出可能的问题或遗漏
-3. 给出改进建议
-4. 如果思路可行，详细解释如何完善
-5. 如果思路不可行，温和地引导到正确方向
+## 你的辅导原则（非常重要！务必遵守！）
+1. **永远不要直接给出完整解法或代码** —— 你的目标是让学生自己想出来
+2. **先肯定学生的正确部分** —— 指出思路中哪些地方是对的，让学生建立信心
+3. **精准定位卡点** —— 学生的思路中哪里不完整/有漏洞/方向偏了？聚焦那个点
+4. **每次只引导一步** —— 提出1-2个启发式问题，让学生思考下一步
+5. **用比喻降低门槛** —— 用生活中的例子类比抽象概念
+6. **以一个问题结束** —— 每次回复最后必须抛出一个具体的、可回答的问题，引导学生继续思考
 
-请用生动、鼓励的语言回答，适合初中学生理解。`;
+## 不同情况的处理策略
+- **学生思路方向正确但不完整**：肯定思路 + 指出缺失的环节 + 提问引导补全
+- **学生思路方向错误**：不要直接否定！先让学生解释为什么这样想，再通过反例引导他自己发现矛盾
+- **学生完全不知道怎么做（空白/混乱）**：从最简单的特例入手，引导学生观察规律
+- **学生思路已经接近正解**：肯定进步 + 提出一个更深入的边界情况让他考虑
+
+## 回复格式
+- 第1段：热情肯定学生的努力和思路中有价值的点
+- 第2段：一次只指出一个最关键的问题/缺口（不要罗列多个）
+- 第3段：用一个**具体的、可操作的引导性问题**结束，让学生思考后可以回复你
+
+请用热情、鼓励的口吻回答，像一位耐心的大哥哥/大姐姐教练。回复长度控制在200-400字以内，不要长篇大论。`;
     return await this.sendMessage(prompt, problemContext);
+  },
+
+  // 多轮对话（带对话历史）
+  async sendConversation(message, context, history) {
+    const settings = Storage.getSettings();
+    if (!settings.apiKey) {
+      return { success: false, message: '请先在设置中填入 API Key' };
+    }
+    if (settings.provider === 'custom' && settings.customApiUrl) {
+      settings._customUrl = settings.customApiUrl;
+    }
+
+    const provider = settings.provider || 'openai';
+    const systemPrompt = this.getSystemPrompt(context);
+    const apiUrl = this.getProviderUrl(provider);
+
+    // 构建消息数组：system + history + current message
+    const messages = [{ role: 'system', content: systemPrompt }];
+    if (history && history.length > 0) {
+      for (const h of history) {
+        messages.push({ role: h.role, content: h.content });
+      }
+    }
+    messages.push({ role: 'user', content: message });
+
+    // 发送多轮对话（支持OpenAI兼容格式）
+    return await this._sendMessages(messages, apiUrl, settings.apiKey, settings.model, provider, false);
+  },
+
+  // 发送消息数组（多轮对话底层实现）
+  async _sendMessages(messages, apiUrl, apiKey, model, provider, isValidation) {
+    const fetchTimeout = isValidation ? 12000 : 45000;
+    const totalTimeout = fetchTimeout + 5000;
+    const operation = async () => {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: isValidation ? 50 : 2000
+        }),
+        signal: AbortSignal.timeout(fetchTimeout)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (!content) {
+        throw new Error('AI 返回了空内容，请检查模型是否可用');
+      }
+      return { success: true, message: content };
+    };
+
+    try {
+      return await this._withTimeout(operation(), totalTimeout);
+    } catch (error) {
+      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+        return { success: false, message: '请求超时，请稍后重试' };
+      }
+      return { success: false, message: `AI 请求失败: ${error.message}` };
+    }
   },
 
   // 帮助debug

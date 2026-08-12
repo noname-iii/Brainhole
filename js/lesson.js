@@ -2,6 +2,7 @@
 const LessonView = {
   currentModule: null,
   currentChapter: null,
+  conversationHistory: null, // 多轮对话历史
 
   // 初始化（供App调用）
   init() {
@@ -267,7 +268,7 @@ const LessonView = {
     }
   },
 
-  // 分析用户思路
+  // 分析用户思路（苏格拉底式引导，支持多轮对话）
   async analyzeThinking() {
     const thinking = document.getElementById('thinkingInput').value.trim();
     if (!thinking) {
@@ -286,20 +287,28 @@ const LessonView = {
     const problem = await Luogu.getProblem(this.currentModule.luoguId);
     const context = `${this.currentChapter.title} - ${problem.title}\n${problem.description}`;
 
+    // 初始化对话历史
+    this.conversationHistory = [
+      { role: 'user', content: thinking }
+    ];
+
     const result = await AI.analyzeThinking(thinking, context);
 
     if (result.success) {
+      // 保存AI回复到对话历史
+      this.conversationHistory.push({ role: 'assistant', content: result.message });
+
       responseArea.innerHTML = `
         <div class="ai-response">
-          <h4>AI 助手的分析</h4>
+          <h4>AI 助手的引导</h4>
           <div class="ai-response-content">${this.formatMarkdown(result.message)}</div>
         </div>
 
         <div class="followup-area">
-          <h4>继续追问</h4>
-          <textarea class="followup-input" id="followupInput" placeholder="有什么不明白的地方吗？可以继续提问..."></textarea>
+          <h4>继续思考</h4>
+          <textarea class="followup-input" id="followupInput" placeholder="回答AI的问题，或者提出新的疑问..."></textarea>
           <div class="followup-actions">
-            <button class="btn-primary" onclick="LessonView.askFollowup()">提问</button>
+            <button class="btn-primary" onclick="LessonView.askFollowup()">回复AI</button>
             <button class="btn-secondary" onclick="LessonView.requestDebug()">帮我Debug</button>
           </div>
         </div>
@@ -321,10 +330,27 @@ const LessonView = {
     if (area && area.innerHTML.trim()) {
       localStorage.setItem('oi_ai_response_' + moduleId, area.innerHTML);
     }
+    // 也保存对话历史
+    if (this.conversationHistory && this.conversationHistory.length > 0) {
+      localStorage.setItem('oi_conv_history_' + moduleId, 
+        JSON.stringify(this.conversationHistory));
+    }
   },
 
   // 恢复AI分析回复
   restoreAiResponse(moduleId) {
+    // 恢复对话历史
+    const savedHistory = localStorage.getItem('oi_conv_history_' + moduleId);
+    if (savedHistory) {
+      try {
+        this.conversationHistory = JSON.parse(savedHistory);
+      } catch (e) {
+        this.conversationHistory = null;
+      }
+    } else {
+      this.conversationHistory = null;
+    }
+
     const saved = localStorage.getItem('oi_ai_response_' + moduleId);
     const area = document.getElementById('aiResponseArea');
     if (area && saved) {
@@ -333,7 +359,7 @@ const LessonView = {
     }
   },
 
-  // 追问
+  // 追问（多轮对话 - 传递完整对话历史）
   async askFollowup() {
     const question = document.getElementById('followupInput').value.trim();
     if (!question) {
@@ -350,14 +376,28 @@ const LessonView = {
     `;
     responseArea.appendChild(loadingDiv);
 
-    const result = await AI.sendMessage(question, `${this.currentChapter.title}`);
+    const problem = await Luogu.getProblem(this.currentModule.luoguId);
+    const context = `${this.currentChapter.title} - ${problem.title}\n${problem.description}`;
+
+    // 追加用户问题到对话历史
+    if (!this.conversationHistory) this.conversationHistory = [];
+    this.conversationHistory.push({ role: 'user', content: question });
+
+    // 使用多轮对话模式，传递完整历史
+    const result = await AI.sendConversation(question, context, this.conversationHistory);
 
     if (result.success) {
+      // 保存AI回复到对话历史
+      this.conversationHistory.push({ role: 'assistant', content: result.message });
+
       loadingDiv.innerHTML = `
-        <h4>AI 助手的回答</h4>
+        <h4>AI 助手的引导</h4>
         <div class="ai-response-content">${this.formatMarkdown(result.message)}</div>
       `;
       this.saveAiResponse(this.currentModule.id);
+      
+      // 清空追问输入框
+      document.getElementById('followupInput').value = '';
     } else {
       loadingDiv.innerHTML = `
         <h4>回答失败</h4>
