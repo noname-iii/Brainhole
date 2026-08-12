@@ -53529,6 +53529,9 @@ const LessonView = {
     // 恢复用户思路草稿
     this.restoreThinkingDraft(module.id);
 
+    // 恢复AI分析回复
+    this.restoreAiResponse(module.id);
+
     // 渲染 LaTeX 数学公式
     this.renderLatex(content);
   },
@@ -53661,6 +53664,7 @@ const LessonView = {
           </div>
         </div>
       `;
+      this.saveAiResponse(this.currentModule.id);
     } else {
       responseArea.innerHTML = `
         <div class="ai-response">
@@ -53668,6 +53672,25 @@ const LessonView = {
           <p>${result.message}</p>
         </div>
       `;
+    }
+  },
+
+  // 保存AI分析回复到localStorage
+  saveAiResponse(moduleId) {
+    const area = document.getElementById('aiResponseArea');
+    if (area && area.innerHTML.trim()) {
+      localStorage.setItem('oi_ai_response_' + moduleId, area.innerHTML);
+    }
+  },
+
+  // 恢复AI分析回复
+  restoreAiResponse(moduleId) {
+    const saved = localStorage.getItem('oi_ai_response_' + moduleId);
+    const area = document.getElementById('aiResponseArea');
+    if (area && saved) {
+      area.innerHTML = saved;
+      // 重新渲染 LaTeX
+      this.renderLatex(area);
     }
   },
 
@@ -53695,6 +53718,7 @@ const LessonView = {
         <h4>AI 助手的回答</h4>
         <div class="ai-response-content">${this.formatMarkdown(result.message)}</div>
       `;
+      this.saveAiResponse(this.currentModule.id);
     } else {
       loadingDiv.innerHTML = `
         <h4>回答失败</h4>
@@ -53726,6 +53750,7 @@ const LessonView = {
         <h4>Debug 结果</h4>
         <div class="ai-response-content">${this.formatMarkdown(result.message)}</div>
       `;
+      this.saveAiResponse(this.currentModule.id);
     } else {
       loadingDiv.innerHTML = `
         <h4>Debug 失败</h4>
