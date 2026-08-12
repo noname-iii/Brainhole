@@ -42,7 +42,7 @@ def read_all_css():
 def read_all_js():
     """读取所有JS文件"""
     js_files = [
-        'data.js', 'content.js',
+        'problem_cache.js', 'data.js', 'content.js',
         'missing_part6.js', 'missing_part7.js', 'missing_part8_10.js',
         'storage.js', 'ai.js', 'luogu.js', 'map.js', 'lesson.js', 'app.js'
     ]
@@ -81,7 +81,7 @@ def build_html():
     # 内联JS
     all_js = read_all_js()
     js_paths = [
-        'js/data.js', 'js/content.js',
+        'js/problem_cache.js', 'js/data.js', 'js/content.js',
         'js/missing_part6.js', 'js/missing_part7.js', 'js/missing_part8_10.js',
         'js/storage.js', 'js/ai.js', 'js/luogu.js', 'js/map.js', 'js/lesson.js', 'js/app.js'
     ]

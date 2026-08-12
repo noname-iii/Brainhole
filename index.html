@@ -9,12 +9,26 @@
     <link rel="stylesheet" href="css/lesson.css">
     <link rel="stylesheet" href="css/ai-chat.css">
     <!-- 第三方库 CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- highlight.js 自定义主题（背景色可调） -->
+    <style>
+      .hljs{display:block;overflow-x:auto;padding:0.5em;color:#abb2bf;background:var(--hljs-bg,#282c34)}
+      .hljs-comment,.hljs-quote{color:#5c6370;font-style:italic}
+      .hljs-doctag,.hljs-keyword,.hljs-formula{color:#c678dd}
+      .hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e06c75}
+      .hljs-literal{color:#56b6c2}
+      .hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta .hljs-string{color:#98c379}
+      .hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#d19a66}
+      .hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#61aeee}
+      .hljs-built_in,.hljs-title.class_,.hljs-class .hljs-title{color:#e6c07b}
+      .hljs-emphasis{font-style:italic}
+      .hljs-strong{font-weight:bold}
+      .hljs-link{text-decoration:underline}
+    </style>
 </head>
 <body>
     <div id="app">
@@ -163,6 +177,14 @@
                             <input type="color" id="settingThemeColor" value="#6366f1">
                             <span class="color-hex" id="settingThemeHex">#6366f1</span>
                             <button type="button" class="btn-reset-color" id="btnResetColor">恢复默认</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>代码背景色</label>
+                        <div class="color-picker-row">
+                            <input type="color" id="settingCodeBg" value="#282c34">
+                            <span class="color-hex" id="settingCodeBgHex">#282c34</span>
+                            <button type="button" class="btn-reset-color" id="btnResetCodeBg">恢复默认</button>
                         </div>
                     </div>
                     <button class="btn-primary" id="btnSaveSettings">保存设置</button>

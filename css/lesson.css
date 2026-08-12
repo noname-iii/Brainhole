@@ -134,30 +134,30 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: #21252b;
+  background: var(--code-header-bg, #21252b);
   border-radius: 8px 8px 0 0;
-  border-bottom: 1px solid #181a1f;
+  border-bottom: 1px solid var(--code-border, #181a1f);
 }
 
 .code-block-lang {
   font-size: 12px;
-  color: #abb2bf;
+  color: var(--code-text-dim, #abb2bf);
   font-weight: 600;
 }
 
 .btn-copy {
   padding: 4px 12px;
   background: transparent;
-  border: 1px solid #3e4451;
+  border: 1px solid var(--code-btn-border, #3e4451);
   border-radius: 4px;
-  color: #abb2bf;
+  color: var(--code-text-dim, #abb2bf);
   font-size: 12px;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .btn-copy:hover {
-  background: #3e4451;
+  background: var(--code-btn-border, #3e4451);
   color: white;
 }
 

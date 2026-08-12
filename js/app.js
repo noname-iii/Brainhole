@@ -10,6 +10,9 @@ const App = {
     // 应用主题色
     this.applyTheme();
     
+    // 应用代码背景色
+    this.applyCodeTheme();
+    
     // 初始化地图视图
     MapView.init();
     
@@ -47,6 +50,67 @@ const App = {
     const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
     const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
     return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  },
+
+  // 应用代码背景色主题
+  applyCodeTheme(color) {
+    const codeBg = color || Storage.getSettings().codeBg || '#282c34';
+    const root = document.documentElement;
+    root.style.setProperty('--hljs-bg', codeBg);
+
+    // 基于HSL计算衍生色
+    const hsl = this.hexToHsl(codeBg);
+
+    // --code-header-bg: 亮度降低4%
+    root.style.setProperty('--code-header-bg', this.hslToHex(hsl.h, hsl.s, Math.max(0, hsl.l - 4)));
+
+    // --code-border: 亮度降低8%
+    root.style.setProperty('--code-border', this.hslToHex(hsl.h, hsl.s, Math.max(0, hsl.l - 8)));
+
+    // --code-btn-border: 亮度增加9%
+    root.style.setProperty('--code-btn-border', this.hslToHex(hsl.h, hsl.s, Math.min(100, hsl.l + 9)));
+
+    // --code-text-dim: 深色背景用浅色字，浅色背景用深色字
+    const textDim = hsl.l > 50
+      ? this.hslToHex(hsl.h, hsl.s, Math.max(0, hsl.l - 50))
+      : this.hslToHex(hsl.h, hsl.s, Math.min(100, hsl.l + 52));
+    root.style.setProperty('--code-text-dim', textDim);
+
+    return codeBg;
+  },
+
+  // hex转hsl
+  hexToHsl(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    let r = parseInt(hex.substring(0, 2), 16) / 255;
+    let g = parseInt(hex.substring(2, 4), 16) / 255;
+    let b = parseInt(hex.substring(4, 6), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  },
+
+  // hsl转hex
+  hslToHex(h, s, l) {
+    s /= 100;
+    l /= 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * c).toString(16).padStart(2, '0');
+    };
+    return '#' + f(0) + f(8) + f(4);
   },
 
   // 绑定全局事件
@@ -134,6 +198,21 @@ const App = {
       this.applyTheme('#6366f1');
     };
 
+    // 设置代码背景色
+    const codeBgInput = document.getElementById('settingCodeBg');
+    const codeBgHexSpan = document.getElementById('settingCodeBgHex');
+    codeBgInput.value = settings.codeBg || '#282c34';
+    codeBgHexSpan.textContent = settings.codeBg || '#282c34';
+    codeBgInput.oninput = () => {
+      codeBgHexSpan.textContent = codeBgInput.value;
+      this.applyCodeTheme(codeBgInput.value);
+    };
+    document.getElementById('btnResetCodeBg').onclick = () => {
+      codeBgInput.value = '#282c34';
+      codeBgHexSpan.textContent = '#282c34';
+      this.applyCodeTheme('#282c34');
+    };
+
     // 服务商切换事件
     providerSelect.onchange = () => {
       this.updateModelList(providerSelect.value);
@@ -148,7 +227,8 @@ const App = {
         apiKey: document.getElementById('settingApiKey').value.trim(),
         model: modelSelect.value.trim(),
         luoguUser: document.getElementById('settingLuoguUser').value.trim(),
-        themeColor: document.getElementById('settingThemeColor').value
+        themeColor: document.getElementById('settingThemeColor').value,
+        codeBg: document.getElementById('settingCodeBg').value
       };
 
       // 如果有API配置，验证连接
