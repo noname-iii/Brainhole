@@ -50111,6 +50111,23 @@ ${context || '学生正在学习 OI 相关知识'}`;
     }
   },
 
+  // 构建 OpenAI 兼容请求体（处理 DeepSeek V4 思考模式）
+  _buildOpenAIBody(model, messages, provider, isValidation) {
+    const body = {
+      model: model,
+      messages: messages,
+      max_tokens: isValidation ? 50 : 2000
+    };
+    if (provider === 'deepseek') {
+      // DeepSeek V4 默认开启思考模式，思维链会占用 max_tokens 导致 content 为空，
+      // 这里显式关闭思考，让最终答案直接输出到 content 字段。
+      body.thinking = { type: 'disabled' };
+    } else {
+      body.temperature = 0.7;
+    }
+    return body;
+  },
+
   // 发送到 OpenAI 兼容接口
   async sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation) {
     const fetchTimeout = isValidation ? 12000 : 45000;  // 验证12s，正常45s
@@ -50122,15 +50139,10 @@ ${context || '学生正在学习 OI 相关知识'}`;
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: message }
-          ],
-          temperature: 0.7,
-          max_tokens: isValidation ? 50 : 2000
-        }),
+        body: JSON.stringify(this._buildOpenAIBody(model, [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message }
+        ], provider, isValidation)),
         signal: AbortSignal.timeout(fetchTimeout)
       });
 
@@ -50140,7 +50152,12 @@ ${context || '学生正在学习 OI 相关知识'}`;
       }
 
       const data = await response.json();
-      const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      const msg = data.choices && data.choices[0] && data.choices[0].message;
+      let content = msg && msg.content;
+      // DeepSeek V4 兜底：思考模式下 content 可能为空，答案在 reasoning_content
+      if (!content && msg && msg.reasoning_content) {
+        content = msg.reasoning_content;
+      }
       if (!content) {
         console.warn('API 返回空内容，完整响应:', JSON.stringify(data));
         throw new Error('AI 返回了空内容，请检查模型是否可用或API Key是否有效');
@@ -50389,12 +50406,7 @@ ${userThinking}
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify({
-          model: model,
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: isValidation ? 50 : 2000
-        }),
+        body: JSON.stringify(this._buildOpenAIBody(model, messages, provider, isValidation)),
         signal: AbortSignal.timeout(fetchTimeout)
       });
 
@@ -50404,7 +50416,12 @@ ${userThinking}
       }
 
       const data = await response.json();
-      const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      const msg = data.choices && data.choices[0] && data.choices[0].message;
+      let content = msg && msg.content;
+      // DeepSeek V4 兜底：思考模式下 content 可能为空，答案在 reasoning_content
+      if (!content && msg && msg.reasoning_content) {
+        content = msg.reasoning_content;
+      }
       if (!content) {
         throw new Error('AI 返回了空内容，请检查模型是否可用');
       }
