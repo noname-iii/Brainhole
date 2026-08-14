@@ -368,13 +368,32 @@ const LessonView = {
     }
 
     const responseArea = document.getElementById('aiResponseArea');
+    const followupArea = responseArea.querySelector('.followup-area');
+
+    // 显示用户的问题（保留在对话流中）
+    const userMsg = document.createElement('div');
+    userMsg.className = 'user-followup';
+    userMsg.innerHTML = '<div class="user-followup-content">' + this.escapeHtml(question) + '</div>';
+
+    // 加载指示器
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'ai-response';
     loadingDiv.innerHTML = `
       <div class="loading"></div>
       <p>AI 正在思考...</p>
     `;
-    responseArea.appendChild(loadingDiv);
+
+    // 将用户问题和加载指示器插入到输入框之前，保证输入框始终在最下方
+    if (followupArea) {
+      responseArea.insertBefore(userMsg, followupArea);
+      responseArea.insertBefore(loadingDiv, followupArea);
+    } else {
+      responseArea.appendChild(userMsg);
+      responseArea.appendChild(loadingDiv);
+    }
+
+    // 立即清空输入框（问题已显示在上方）
+    document.getElementById('followupInput').value = '';
 
     const problem = await Luogu.getProblem(this.currentModule.luoguId);
     const context = `${this.currentChapter.title} - ${problem.title}\n${problem.description}`;
@@ -395,9 +414,6 @@ const LessonView = {
         <div class="ai-response-content">${this.formatMarkdown(result.message)}</div>
       `;
       this.saveAiResponse(this.currentModule.id);
-      
-      // 清空追问输入框
-      document.getElementById('followupInput').value = '';
     } else {
       loadingDiv.innerHTML = `
         <h4>回答失败</h4>
