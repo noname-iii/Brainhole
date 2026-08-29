@@ -11,7 +11,7 @@ const AI = {
     baidu: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat',
     moonshot: 'https://api.moonshot.cn/v1/chat/completions',
     yi: 'https://api.lingyiwanwu.com/v1/chat/completions',
-    minimax: 'https://api.minimax.chat/v1/text/chatcompletion_pro',
+    minimax: 'https://api.minimax.chat/v1/text/chatcompletion_v2',
     siliconflow: 'https://api.siliconflow.cn/v1/chat/completions'
   },
 
@@ -34,10 +34,23 @@ const AI = {
 - 灵活调整：不要过于坚持自己的想法，要根据学生的实际情况调整思路
 - 多鼓励少批评：让学生保持学习热情，建立信心
 
+**引导式回答原则（非常重要！务必遵守！）**
+1. **不要直接给出最终答案** —— 当用户提出问题时，先弄清用户目前已经理解到哪里、卡在什么地方，然后一步步引导他自己得到结果
+2. **每次只推进一小步** —— 每次回复只讲解/引导一个关键点，不要一次性把整个解题过程、完整结论或完整代码全部倒出来
+3. **以引导性问题结尾** —— 每次回复的最后抛出一个具体的、学生可以直接回答的问题，让他思考后继续对话，再进行下一步引导
+4. **先肯定再引导** —— 发现用户思考中有价值的部分先肯定，再针对卡点提问
+5. **可以用提示和类比** —— 用生活中的例子类比抽象概念；可以给方向性提示（如"考虑一下复杂度""试试小数据"），但不直接揭晓答案
+6. **用户明确要求时才给完整答案** —— 仅当用户明确说"直接告诉我答案/完整代码"，或经过多轮引导后用户仍无法推进时，才给出完整解答；给答案时要附上一步步的推导过程
+
+**例外场景（不受上述引导原则限制）**
+- 题目翻译任务：只输出翻译结果
+- 用户明确要求完整代码修正的 Debug 任务：按用户要求执行
+- 概念性科普提问（如"什么是时间复杂度"）：可直接讲解概念，但讲解后可以引导学生把概念用到他当前的问题上
+
 **代码规范**
 - 如果涉及代码，使用 C++ 并添加详细注释
 - 解释代码时要逐行或逐块说明，确保学生能理解
-- 给出代码前先解释思路，让学生知道为什么要这样写
+- 引导阶段尽量只给伪代码或代码片段提示，完整代码留到用户自己尝试之后
 
 **当前学习的内容**
 ${context || '学生正在学习 OI 相关知识'}`;
@@ -48,21 +61,37 @@ ${context || '学生正在学习 OI 相关知识'}`;
     return this.providerUrls[provider] || this.providerUrls.openai;
   },
 
-  // 发送到指定提供商
-  async sendToProvider(provider, message, context, apiKey, model, isValidation = false) {
+  // 发送到指定提供商（支持深度思考，失败自动回退普通模式）
+  async sendToProvider(provider, message, context, apiKey, model, isValidation = false, deepThinking = false) {
     const systemPrompt = this.getSystemPrompt(context);
     const apiUrl = this.getProviderUrl(provider);
 
-    switch (provider) {
-      case 'anthropic':
-        return await this.sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation);
-      case 'google':
-        return await this.sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation);
-      case 'baidu':
-        return await this.sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation);
-      default:
-        return await this.sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation);
+    const dispatch = (dt) => {
+      switch (provider) {
+        case 'anthropic':
+          return this.sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation, dt);
+        case 'google':
+          return this.sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation, dt);
+        case 'baidu':
+          return this.sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation, dt);
+        default:
+          return this.sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation, dt);
+      }
+    };
+
+    let result = await dispatch(deepThinking);
+    // 厂商/模型不支持思考参数时会报错，自动降级为普通模式重试一次（认证/配额错误除外）
+    if (!result.success && deepThinking && !isValidation && this._shouldFallbackToPlain(result)) {
+      console.warn('深度思考请求失败，自动回退为普通模式重试:', result.message);
+      result = await dispatch(false);
     }
+    return result;
+  },
+
+  // 判断是否应回退为普通模式重试（认证/配额类错误与思考参数无关，无需重试）
+  _shouldFallbackToPlain(result) {
+    const m = String((result && result.message) || '');
+    return !/401|403|429|api\s*key|密钥|quota|余额|欠费/i.test(m);
   },
 
   // 通用超时包装器（Promise.race 安全网）
@@ -81,26 +110,57 @@ ${context || '学生正在学习 OI 相关知识'}`;
     }
   },
 
-  // 构建 OpenAI 兼容请求体（处理 DeepSeek V4 思考模式）
-  _buildOpenAIBody(model, messages, provider, isValidation) {
+  // 构建 OpenAI 兼容请求体（支持深度思考模式）
+  _buildOpenAIBody(model, messages, provider, isValidation, deepThinking = false) {
+    // 开启思考后思维链会占用输出额度，需大幅提高 max_tokens，
+    // 否则推理耗尽额度会导致 content 为空或回答被截断。
     const body = {
       model: model,
       messages: messages,
-      max_tokens: isValidation ? 50 : 2000
+      max_tokens: isValidation ? 50 : (deepThinking ? 8192 : 2000)
     };
-    if (provider === 'deepseek') {
-      // DeepSeek V4 默认开启思考模式，思维链会占用 max_tokens 导致 content 为空，
-      // 这里显式关闭思考，让最终答案直接输出到 content 字段。
-      body.thinking = { type: 'disabled' };
-    } else {
-      body.temperature = 0.7;
+    if (!deepThinking || isValidation) {
+      if (provider === 'deepseek') {
+        // deepseek-chat (V3.1+) 开启思考后思维链会占用 max_tokens 导致 content 为空，
+        // 普通模式显式关闭思考，让最终答案直接输出到 content 字段；
+        // deepseek-reasoner (R1) 始终输出推理、不接受 thinking 参数，故跳过。
+        if (!/reasoner|\br1\b/i.test(model)) {
+          body.thinking = { type: 'disabled' };
+        }
+      } else {
+        // o 系列推理模型 (o1/o3/o4-mini) 不支持 temperature 参数，跳过避免报错
+        if (!/^o\d/i.test(model)) {
+          body.temperature = 0.7;
+        }
+      }
+      return body;
+    }
+    // 深度思考模式：仅为支持思考参数的厂商/模型携带对应参数，
+    // 其余厂商 (openai/moonshot/yi/minimax/custom) 直接以默认配置请求，
+    // o3/o4-mini/MiniMax-M1 等推理模型本身就会输出推理，无需额外参数。
+    // 若某模型不支持对应参数导致报错，上层会自动回退为普通模式重试。
+    switch (provider) {
+      case 'qwen':
+      case 'siliconflow':
+        body.enable_thinking = true;
+        break;
+      case 'deepseek':
+        // deepseek-chat 需显式开启思考；reasoner 已自带推理，不传该参数
+        if (!/reasoner|\br1\b/i.test(model)) {
+          body.thinking = { type: 'enabled' };
+        }
+        break;
+      case 'zhipu':
+        body.thinking = { type: 'enabled' };
+        break;
     }
     return body;
   },
 
   // 发送到 OpenAI 兼容接口
-  async sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation) {
-    const fetchTimeout = isValidation ? 12000 : 45000;  // 验证12s，正常45s
+  async sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation, deepThinking = false) {
+    // 深度思考耗时明显更长，超时时间相应放宽
+    const fetchTimeout = isValidation ? 12000 : (deepThinking ? 120000 : 45000);
     const totalTimeout = fetchTimeout + 5000;            // 整体多5s缓冲
     const operation = async () => {
       const response = await fetch(apiUrl, {
@@ -112,7 +172,7 @@ ${context || '学生正在学习 OI 相关知识'}`;
         body: JSON.stringify(this._buildOpenAIBody(model, [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
-        ], provider, isValidation)),
+        ], provider, isValidation, deepThinking)),
         signal: AbortSignal.timeout(fetchTimeout)
       });
 
@@ -124,15 +184,16 @@ ${context || '学生正在学习 OI 相关知识'}`;
       const data = await response.json();
       const msg = data.choices && data.choices[0] && data.choices[0].message;
       let content = msg && msg.content;
-      // DeepSeek V4 兜底：思考模式下 content 可能为空，答案在 reasoning_content
-      if (!content && msg && msg.reasoning_content) {
-        content = msg.reasoning_content;
+      const reasoning = (msg && msg.reasoning_content) || '';
+      // 思考模式兜底：content 可能为空，答案在 reasoning_content
+      if (!content && reasoning) {
+        content = reasoning;
       }
       if (!content) {
         console.warn('API 返回空内容，完整响应:', JSON.stringify(data));
         throw new Error('AI 返回了空内容，请检查模型是否可用或API Key是否有效');
       }
-      return { success: true, message: content };
+      return { success: true, message: content, reasoning };
     };
 
     try {
@@ -147,10 +208,20 @@ ${context || '学生正在学习 OI 相关知识'}`;
   },
 
   // 发送到 Anthropic (Claude)
-  async sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
-    const fetchTimeout = isValidation ? 12000 : 45000;
+  async sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation, deepThinking = false) {
+    const fetchTimeout = isValidation ? 12000 : (deepThinking ? 180000 : 45000);
     const totalTimeout = fetchTimeout + 5000;
     const operation = async () => {
+      const body = {
+        model: model,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: message }],
+        max_tokens: isValidation ? 50 : (deepThinking ? 8000 : 2000)
+      };
+      if (deepThinking && !isValidation) {
+        // 扩展思考：budget_tokens 必须小于 max_tokens，且不可与 temperature 同用
+        body.thinking = { type: 'enabled', budget_tokens: 4000 };
+      }
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -159,12 +230,7 @@ ${context || '学生正在学习 OI 相关知识'}`;
           'anthropic-version': '2023-06-01',
           'anthropic-dangerous-direct-browser-access': 'true'
         },
-        body: JSON.stringify({
-          model: model,
-          system: systemPrompt,
-          messages: [{ role: 'user', content: message }],
-          max_tokens: isValidation ? 50 : 2000
-        }),
+        body: JSON.stringify(body),
         signal: AbortSignal.timeout(fetchTimeout)
       });
 
@@ -193,11 +259,20 @@ ${context || '学生正在学习 OI 相关知识'}`;
   },
 
   // 发送到 Google (Gemini)
-  async sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
-    const fetchTimeout = isValidation ? 12000 : 45000;
+  async sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation, deepThinking = false) {
+    const fetchTimeout = isValidation ? 12000 : (deepThinking ? 180000 : 45000);
     const totalTimeout = fetchTimeout + 5000;
     const operation = async () => {
       const url = `${apiUrl}/${model}:generateContent?key=${apiKey}`;
+      const generationConfig = {
+        temperature: 0.7,
+        maxOutputTokens: isValidation ? 50 : 2000
+      };
+      if (deepThinking && !isValidation) {
+        generationConfig.maxOutputTokens = 8000;
+        // thinkingBudget: -1 表示动态思考；includeThoughts 返回思考摘要
+        generationConfig.thinkingConfig = { thinkingBudget: -1, includeThoughts: true };
+      }
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -206,10 +281,7 @@ ${context || '学生正在学习 OI 相关知识'}`;
             role: 'user',
             parts: [{ text: `${systemPrompt}\n\n用户问题：${message}` }]
           }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: isValidation ? 50 : 2000
-          }
+          generationConfig
         }),
         signal: AbortSignal.timeout(fetchTimeout)
       });
@@ -220,14 +292,23 @@ ${context || '学生正在学习 OI 相关知识'}`;
       }
 
       const data = await response.json();
-      const content = data.candidates && data.candidates[0] && data.candidates[0].content &&
-                      data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
-                      data.candidates[0].content.parts[0].text;
+      const parts = data.candidates && data.candidates[0] && data.candidates[0].content &&
+                    data.candidates[0].content.parts;
+      let content = '';
+      let reasoning = '';
+      if (parts) {
+        for (const p of parts) {
+          if (!p || !p.text) continue;
+          if (p.thought) reasoning += p.text;   // 思考摘要片段
+          else content += p.text;               // 正式回答片段
+        }
+      }
+      if (!content && reasoning) content = reasoning;
       if (!content) {
         console.warn('Gemini 返回空内容:', JSON.stringify(data));
         throw new Error('Gemini 返回了空内容，请检查模型配置');
       }
-      return { success: true, message: content };
+      return { success: true, message: content, reasoning };
     };
 
     try {
@@ -241,7 +322,7 @@ ${context || '学生正在学习 OI 相关知识'}`;
   },
 
   // 发送到百度文心一言
-  async sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
+  async sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation, deepThinking = false) {
     const fetchTimeout = isValidation ? 12000 : 45000;
     const totalTimeout = fetchTimeout + 8000;  // 百度需要额外获取token，多给缓冲
     const operation = async () => {
@@ -263,7 +344,8 @@ ${context || '学生正在学习 OI 相关知识'}`;
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: message }
-          ]
+          ],
+          ...(deepThinking && !isValidation ? { enable_thinking: true } : {})
         }),
         signal
       });
@@ -302,7 +384,9 @@ ${context || '学生正在学习 OI 相关知识'}`;
     }
 
     const provider = settings.provider || 'openai';
-    return await this.sendToProvider(provider, message, context, settings.apiKey, settings.model, false);
+    // 深度思考默认开启（历史设置无此字段时视为开启）
+    const deepThinking = settings.deepThinking !== false;
+    return await this.sendToProvider(provider, message, context, settings.apiKey, settings.model, false, deepThinking);
   },
 
   // 分析用户思路（苏格拉底式引导 - 不直接给答案）
@@ -361,13 +445,25 @@ ${userThinking}
     }
     messages.push({ role: 'user', content: message });
 
-    // 发送多轮对话（支持OpenAI兼容格式）
-    return await this._sendMessages(messages, apiUrl, settings.apiKey, settings.model, provider, false);
+    // 发送多轮对话（支持OpenAI兼容格式），深度思考默认开启
+    const deepThinking = settings.deepThinking !== false;
+    return await this._sendMessages(messages, apiUrl, settings.apiKey, settings.model, provider, false, deepThinking);
   },
 
-  // 发送消息数组（多轮对话底层实现）
-  async _sendMessages(messages, apiUrl, apiKey, model, provider, isValidation) {
-    const fetchTimeout = isValidation ? 12000 : 45000;
+  // 发送消息数组（多轮对话底层实现，含深度思考失败自动回退）
+  async _sendMessages(messages, apiUrl, apiKey, model, provider, isValidation, deepThinking = false) {
+    let result = await this._postChatCompletions(messages, apiUrl, apiKey, model, provider, isValidation, deepThinking);
+    if (!result.success && deepThinking && !isValidation && this._shouldFallbackToPlain(result)) {
+      console.warn('深度思考请求失败，自动回退为普通模式重试:', result.message);
+      result = await this._postChatCompletions(messages, apiUrl, apiKey, model, provider, isValidation, false);
+    }
+    return result;
+  },
+
+  // 调用 Chat Completions 接口（多轮对话实际请求）
+  async _postChatCompletions(messages, apiUrl, apiKey, model, provider, isValidation, deepThinking = false) {
+    // 深度思考耗时明显更长，超时时间相应放宽
+    const fetchTimeout = isValidation ? 12000 : (deepThinking ? 120000 : 45000);
     const totalTimeout = fetchTimeout + 5000;
     const operation = async () => {
       const response = await fetch(apiUrl, {
@@ -376,7 +472,7 @@ ${userThinking}
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify(this._buildOpenAIBody(model, messages, provider, isValidation)),
+        body: JSON.stringify(this._buildOpenAIBody(model, messages, provider, isValidation, deepThinking)),
         signal: AbortSignal.timeout(fetchTimeout)
       });
 
@@ -388,14 +484,15 @@ ${userThinking}
       const data = await response.json();
       const msg = data.choices && data.choices[0] && data.choices[0].message;
       let content = msg && msg.content;
-      // DeepSeek V4 兜底：思考模式下 content 可能为空，答案在 reasoning_content
-      if (!content && msg && msg.reasoning_content) {
-        content = msg.reasoning_content;
+      const reasoning = (msg && msg.reasoning_content) || '';
+      // 思考模式兜底：content 可能为空，答案在 reasoning_content
+      if (!content && reasoning) {
+        content = reasoning;
       }
       if (!content) {
         throw new Error('AI 返回了空内容，请检查模型是否可用');
       }
-      return { success: true, message: content };
+      return { success: true, message: content, reasoning };
     };
 
     try {
@@ -406,6 +503,37 @@ ${userThinking}
       }
       return { success: false, message: `AI 请求失败: ${error.message}` };
     }
+  },
+
+  // 检测文本是否以英文为主（拉丁字母显著多于中文，用于识别英文题面）
+  isEnglishDominant(text) {
+    if (!text) return false;
+    const latin = (text.match(/[A-Za-z]/g) || []).length;
+    const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+    // 至少有一定篇幅的英文，且明显多于中文才判定为英文题面
+    return latin >= 200 && latin > cjk * 2;
+  },
+
+  // 将英文题面翻译为中文（保留 Markdown 与 LaTeX 结构）
+  async translateToChinese(text) {
+    const settings = Storage.getSettings();
+    if (!settings.apiKey) {
+      return { success: false, message: '请先在设置中配置 AI API 密钥后再翻译' };
+    }
+    if (!settings.model) {
+      return { success: false, message: '请先在设置中选择 AI 模型后再翻译' };
+    }
+    const prompt = `请将下面的 OI 竞赛题目题面完整翻译成简体中文。要求：
+1. 严格保留所有 Markdown 格式（标题、加粗、列表、图片、链接等）和 LaTeX 公式（$...$、$$...$$）原样不变
+2. 题目中的变量名、函数名、代码片段保持原样不翻译
+3. 使用"题目描述""输入格式""输出格式""说明/提示"等中文标准小节表述
+4. 只输出翻译结果，不要添加任何解释或前后缀
+
+原文：
+${text}`;
+    // 翻译任务不需要深度思考，直接用普通模式调用以保证速度
+    const provider = settings.provider || 'openai';
+    return await this.sendToProvider(provider, prompt, '', settings.apiKey, settings.model, false, false);
   },
 
   // 帮助debug
@@ -513,10 +641,13 @@ const AIAssistant = {
     input.value = '';
     messages.scrollTop = messages.scrollHeight;
 
-    // 添加加载指示器
+    // 添加加载指示器（深度思考模式给出更明确的等待提示）
+    const deepThinking = Storage.getSettings().deepThinking !== false;
     const loadingMsg = document.createElement('div');
     loadingMsg.className = 'chat-message assistant';
-    loadingMsg.innerHTML = '<div class="chat-bubble"><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>';
+    loadingMsg.innerHTML = '<div class="chat-bubble"><div class="thinking-status">' +
+      (deepThinking ? '<span class="thinking-emoji">🤔</span>正在深度思考，请稍候…' : '正在输入…') +
+      '</div><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>';
     messages.appendChild(loadingMsg);
     messages.scrollTop = messages.scrollHeight;
 
@@ -527,13 +658,21 @@ const AIAssistant = {
     const aiMsg = document.createElement('div');
     aiMsg.className = 'chat-message assistant';
     if (result.success) {
-      const formatted = this.formatMarkdown(result.message);
-      aiMsg.innerHTML = '<div class="chat-bubble">' + formatted + '</div>';
+      let inner = '';
+      // 展示思维链（若服务商返回 reasoning 内容）
+      if (result.reasoning) {
+        inner += '<details class="reasoning-block"><summary>🤔 思考过程（点击展开）</summary>' +
+          '<div class="reasoning-content">' + this.escapeHtml(result.reasoning) + '</div></details>';
+      }
+      inner += '<div class="chat-bubble">' + this.formatMarkdown(result.message) + '</div>';
+      aiMsg.innerHTML = inner;
     } else {
       aiMsg.innerHTML = '<div class="chat-bubble" style="color:var(--error-color)">' + result.message + '</div>';
     }
     messages.appendChild(aiMsg);
     messages.scrollTop = messages.scrollHeight;
+    // 渲染代码高亮
+    this.highlightCode(aiMsg);
   },
 
   escapeHtml(text) {
@@ -546,6 +685,7 @@ const AIAssistant = {
   formatMarkdown(text) {
     if (!text) return '';
     try {
+      if (typeof marked === 'undefined' || !marked.parse) return this.simpleMarkdown(text);
       const result = marked.parse(text);
       if (result && typeof result.then === 'function') {
         // marked >=12 异步版本，用简单替换兜底
@@ -558,6 +698,46 @@ const AIAssistant = {
       return String(result);
     } catch(e) {
       return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    }
+  },
+
+  // 简单Markdown解析（无 marked 时的兜底，支持代码块/标题/列表等）
+  simpleMarkdown(text) {
+    if (!text) return '';
+    // 用字符码构造转义串，避免源码中出现实体字面量
+    const A = String.fromCharCode(38);
+    const esc = (s) => s.replace(/[&<>]/g, (ch) =>
+      ch === '&' ? A + 'amp;' : ch === '<' ? A + 'lt;' : A + 'gt;');
+    // 先抽出围栏代码块，避免内部被行内规则误处理
+    const codeBlocks = [];
+    let src = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (m, lang, code) => {
+      codeBlocks.push('<pre><code class="language-' + (lang || 'cpp') + '">' + esc(code.replace(/\n$/, '')) + '</code></pre>');
+      return '\u0000CODE' + (codeBlocks.length - 1) + '\u0000';
+    });
+    src = esc(src);
+    src = src
+      .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.*)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.*)$/gm, '<h1>$1</h1>')
+      .replace(new RegExp('^' + A + 'gt; (.*)$', 'gm'), '<blockquote>$1</blockquote>')
+      .replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
+      .replace(/(<li>[\s\S]*?<\/li>)(\n|$)/g, (m) => '<ul>' + m.trim() + '</ul>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+      .replace(/\n/g, '<br>');
+    // 回填代码块
+    src = src.replace(/\u0000CODE(\d+)\u0000/g, (m, i) => codeBlocks[+i] || '');
+    return src;
+  },
+
+  // 对容器内的代码块做高亮（hljs 可用时）
+  highlightCode(container) {
+    if (container && typeof hljs !== 'undefined') {
+      try {
+        container.querySelectorAll('pre code:not(.hljs)').forEach((el) => hljs.highlightElement(el));
+      } catch(e) { /* 高亮失败不影响内容展示 */ }
     }
   }
 };
