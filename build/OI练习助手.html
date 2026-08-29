@@ -8,9 +8,9 @@
     
     
     
-    <!-- 第三方库 CDN -->
+    <!-- 第三方库：marked 本地化（离线也能正常渲染 Markdown），其余走 CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+    <script src="js/vendor/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -30,7 +30,7 @@
       .hljs-link{text-decoration:underline}
     </style>
 <style>
-* {margin: 0;padding: 0;box-sizing: border-box;}:root {--primary-color: #6366f1;--primary-dark: #4f46e5;--primary-light: #818cf8;--secondary-color: #8b5cf6;--accent-color: #f59e0b;--bg-color: #fafafa;--card-bg: #ffffff;--text-primary: #18181b;--text-secondary: #71717a;--border-color: #e4e4e7;--success-color: #10b981;--warning-color: #f59e0b;--error-color: #ef4444;--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);--radius: 12px;--radius-sm: 8px;--radius-lg: 16px;--transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);--hljs-bg: #282c34;--code-header-bg: #21252b;--code-border: #181a1f;--code-text-dim: #abb2bf;--code-btn-border: #3e4451;}body {font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;background: var(--bg-color);color: var(--text-primary);overflow: hidden;height: 100vh;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;}#app {display: flex;flex-direction: column;height: 100vh;}#header {display: flex;align-items: center;justify-content: space-between;padding: 16px 32px;background: var(--card-bg);border-bottom: 1px solid var(--border-color);box-shadow: var(--shadow);z-index: 100;}.header-left {display: flex;align-items: center;gap: 12px;}.logo {display: flex;align-items: center;gap: 8px;font-size: 20px;font-weight: 700;}.logo-icon {font-size: 28px;}.logo-text {color: var(--text-primary);font-weight: 700;}.header-center {display: flex;align-items: center;gap: 12px;flex: 1;max-width: 400px;margin: 0 24px;}.progress-bar {flex: 1;height: 8px;background: var(--border-color);border-radius: 4px;overflow: hidden;}.progress-fill {height: 100%;background: var(--primary-color);width: 0%;transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);border-radius: 4px;}.progress-text {font-size: 14px;font-weight: 600;color: var(--text-secondary);min-width: 40px;}.header-right {display: flex;gap: 8px;}.btn-icon {width: 40px;height: 40px;border: none;background: transparent;border-radius: 8px;cursor: pointer;font-size: 20px;transition: var(--transition);display: flex;align-items: center;justify-content: center;}.btn-icon:hover {background: var(--border-color);transform: scale(1.05);}#mainContent {flex: 1;overflow: hidden;position: relative;}.view {display: none;height: 100%;overflow-y: auto;}.view.active {display: block;}::-webkit-scrollbar {width: 8px;height: 8px;}::-webkit-scrollbar-track {background: var(--bg-color);}::-webkit-scrollbar-thumb {background: var(--border-color);border-radius: 4px;}::-webkit-scrollbar-thumb:hover {background: var(--text-secondary);}.btn-primary {padding: 12px 24px;background: var(--primary-color);color: white;border: none;border-radius: var(--radius);font-size: 16px;font-weight: 600;cursor: pointer;transition: var(--transition);box-shadow: var(--shadow);}.btn-primary:hover {background: var(--primary-dark);box-shadow: var(--shadow-md);transform: translateY(-1px);}.btn-primary:active {transform: translateY(0);box-shadow: var(--shadow);}.btn-secondary {padding: 12px 24px;background: var(--card-bg);color: var(--text-primary);border: 1px solid var(--border-color);border-radius: var(--radius);font-size: 16px;font-weight: 600;cursor: pointer;transition: var(--transition);}.btn-secondary:hover {background: var(--bg-color);border-color: var(--primary-color);color: var(--primary-color);}.modal {display: none;position: fixed;top: 0;left: 0;width: 100%;height: 100%;z-index: 1000;align-items: center;justify-content: center;background: rgba(0, 0, 0, 0.4);backdrop-filter: blur(4px);-webkit-backdrop-filter: blur(4px);animation: fadeIn 0.2s ease;}.modal.active {display: flex;}.modal-overlay {position: absolute;top: 0;left: 0;width: 100%;height: 100%;}.modal-content {position: relative;background: var(--card-bg);border-radius: var(--radius);max-width: 600px;width: 90%;max-height: 80vh;overflow-y: auto;box-shadow: var(--shadow);animation: modalSlideIn 0.3s ease;}@keyframes modalSlideIn {from {opacity: 0;transform: translateY(-20px);}to {opacity: 1;transform: translateY(0);}}.modal-header {display: flex;align-items: center;justify-content: space-between;padding: 20px 24px;border-bottom: 1px solid var(--border-color);}.modal-header h2 {font-size: 20px;font-weight: 700;}.btn-close {width: 32px;height: 32px;border: none;background: transparent;border-radius: 8px;cursor: pointer;font-size: 18px;color: var(--text-secondary);transition: var(--transition);display: flex;align-items: center;justify-content: center;}.btn-close:hover {background: var(--border-color);color: var(--text-primary);}.modal-body {padding: 24px;}.setting-group {margin-bottom: 20px;}.setting-group label {display: block;margin-bottom: 8px;font-size: 14px;font-weight: 600;color: var(--text-secondary);}.setting-group input {width: 100%;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;transition: var(--transition);}.setting-group input:focus {outline: none;border-color: var(--primary-color);}[title] {position: relative;}.loading {display: inline-block;width: 20px;height: 20px;border: 3px solid var(--border-color);border-top-color: var(--primary-color);border-radius: 50%;animation: spin 0.8s linear infinite;}@keyframes spin {to {transform: rotate(360deg);}}pre {background: var(--hljs-bg, #282c34);border-radius: 8px;padding: 16px;overflow-x: auto;margin: 16px 0;}code {font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;font-size: 14px;line-height: 1.6;}.icon-btn {width: 40px;height: 40px;border: none;background: transparent;border-radius: 8px;cursor: pointer;font-size: 20px;transition: var(--transition);display: flex;align-items: center;justify-content: center;color: var(--text-primary);}.icon-btn:hover {background: var(--border-color);transform: scale(1.05);}.modal-close {width: 32px;height: 32px;border: none;background: transparent;border-radius: 8px;cursor: pointer;font-size: 22px;color: var(--text-secondary);transition: var(--transition);display: flex;align-items: center;justify-content: center;}.modal-close:hover {background: var(--border-color);color: var(--text-primary);}.form-group {margin-bottom: 20px;}.form-group label {display: block;margin-bottom: 8px;font-size: 14px;font-weight: 600;color: var(--text-secondary);}.form-group input {width: 100%;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;transition: var(--transition);}.form-group select {width: 100%;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;transition: var(--transition);cursor: pointer;appearance: none;-webkit-appearance: none;background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat: no-repeat;background-position: right 12px center;padding-right: 36px;}.form-group select:focus {outline: none;border-color: var(--primary-color);box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);}.form-group input:focus {outline: none;border-color: var(--primary-color);box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);}.stats-content {display: grid;grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));gap: 16px;}.stat-card {background: var(--bg-color);border-radius: var(--radius);padding: 20px;display: flex;align-items: center;gap: 16px;border: 1px solid var(--border-color);transition: var(--transition);}.stat-card:hover {border-color: var(--primary-color);transform: translateY(-2px);}.stat-icon {font-size: 32px;}.stat-info {display: flex;flex-direction: column;}.stat-value {font-size: 24px;font-weight: 700;color: var(--primary-color);}.stat-label {font-size: 13px;color: var(--text-secondary);margin-top: 2px;}.modal-header h3 {font-size: 20px;font-weight: 700;}@media (max-width: 768px) {#header {padding: 12px 16px;}.logo-text {font-size: 16px;}.header-center {max-width: 200px;margin: 0 12px;}.btn-icon {width: 36px;height: 36px;font-size: 18px;}}.ac-confirm-overlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0,0,0,0.5);z-index: 10000;display: flex;align-items: center;justify-content: center;animation: fadeIn 0.2s ease;}.ac-confirm-dialog {background: var(--card-bg, #fff);border-radius: var(--radius-lg, 16px);padding: 32px;max-width: 420px;width: 90%;text-align: center;box-shadow: var(--shadow-lg);animation: slideUp 0.25s ease;}.ac-confirm-icon {font-size: 48px;margin-bottom: 12px;}.ac-confirm-dialog h3 {font-size: 20px;font-weight: 700;margin-bottom: 8px;color: var(--text-primary, #18181b);}.ac-confirm-dialog p {color: var(--text-secondary, #71717a);margin-bottom: 20px;line-height: 1.6;font-size: 15px;}.ac-confirm-buttons {display: flex;gap: 12px;justify-content: center;}.ac-confirm-buttons .btn-secondary {padding: 10px 20px;border-radius: var(--radius-sm, 8px);border: 1px solid var(--border-color);background: #fff;color: var(--text-secondary);cursor: pointer;font-size: 14px;transition: var(--transition);}.ac-confirm-buttons .btn-secondary:hover {background: #f4f4f5;}.ac-confirm-buttons .btn-ac-confirm {padding: 10px 20px;border-radius: var(--radius-sm, 8px);border: none;background: var(--primary-color, #6366f1);color: #fff;cursor: pointer;font-size: 14px;font-weight: 600;transition: var(--transition);}.ac-confirm-buttons .btn-ac-confirm:hover {background: var(--primary-dark, #4f46e5);}.custom-toast {position: fixed;bottom: 30px;left: 50%;transform: translateX(-50%) translateY(100px);background: var(--success-color, #10b981);color: #fff;padding: 14px 28px;border-radius: var(--radius, 12px);font-size: 15px;font-weight: 600;z-index: 10001;box-shadow: var(--shadow-lg);transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);}.custom-toast.show {transform: translateX(-50%) translateY(0);}.custom-toast.error {background: var(--error-color, #ef4444);}@keyframes fadeIn {from {opacity: 0;}to {opacity: 1;}}@keyframes slideUp {from {opacity: 0;transform: translateY(30px);}to {opacity: 1;transform: translateY(0);}}.color-picker-row {display: flex;align-items: center;gap: 12px;}.color-picker-row input[type="color"] {width: 42px;height: 42px;border: 2px solid var(--border-color);border-radius: 8px;cursor: pointer;padding: 2px;background: none;}.color-picker-row input[type="color"]:hover {border-color: var(--primary-color);}.color-hex {font-family: 'Fira Code', 'Consolas', monospace;font-size: 14px;font-weight: 600;color: var(--text-primary);min-width: 70px;}.btn-reset-color {padding: 6px 14px;border: 1px solid var(--border-color);border-radius: 6px;background: var(--bg-color);color: var(--text-secondary);font-size: 13px;cursor: pointer;transition: var(--transition);}.btn-reset-color:hover {border-color: var(--primary-color);color: var(--primary-color);}.map-container {padding: 40px 20px;max-width: 1200px;margin: 0 auto;}.part-section {margin-bottom: 48px;}.part-header {margin-bottom: 24px;padding: 16px 24px;background: var(--card-bg);border-radius: var(--radius);border: 1px solid var(--border-color);box-shadow: var(--shadow);}.part-header h2 {font-size: 20px;font-weight: 700;color: var(--text-primary);margin: 0;}.learning-path {display: flex;flex-direction: column;gap: 20px;align-items: center;padding: 20px 0;}.chapter-node {display: flex;align-items: center;gap: 20px;padding: 16px 24px;background: var(--card-bg);border-radius: var(--radius-lg);border: 1px solid var(--border-color);cursor: pointer;transition: var(--transition);max-width: 500px;width: 100%;box-shadow: var(--shadow);}.chapter-node:hover {transform: translateY(-2px);border-color: var(--primary-color);box-shadow: var(--shadow-lg);}.chapter-node.locked {opacity: 0.5;cursor: not-allowed;}.chapter-node.locked:hover {transform: none;border-color: var(--border-color);box-shadow: var(--shadow);}.chapter-circle {width: 64px;height: 64px;border-radius: 50%;display: flex;align-items: center;justify-content: center;font-size: 28px;flex-shrink: 0;position: relative;transition: var(--transition);}.chapter-circle.locked {background: #f4f4f5;border: 2px solid var(--border-color);color: #a1a1aa;}.chapter-circle.available {background: var(--primary-color);box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);color: #fff;}.chapter-circle.completed {background: var(--success-color);box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);color: #fff;}.chapter-circle.in-progress {background: var(--accent-color);box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);color: #fff;}.chapter-circle .chapter-icon {font-size: 18px;font-weight: 700;letter-spacing: -0.5px;color: inherit;}.chapter-badge {position: absolute;top: -4px;right: -4px;width: 24px;height: 24px;background: white;border-radius: 50%;display: flex;align-items: center;justify-content: center;font-size: 14px;color: var(--success-color);font-weight: bold;box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);}.chapter-info {flex: 1;min-width: 0;}.chapter-title {font-size: 16px;font-weight: 600;color: var(--text-primary);margin-bottom: 8px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;}.chapter-progress {display: flex;align-items: center;gap: 12px;}.chapter-progress .progress-bar {flex: 1;height: 8px;background: var(--border-color);border-radius: 4px;overflow: hidden;}.chapter-progress .progress-fill {height: 100%;background: var(--primary-color);transition: width 0.3s ease;}.chapter-progress .progress-text {font-size: 14px;color: var(--text-secondary);font-weight: 500;white-space: nowrap;}.chapter-section {margin-bottom: 60px;animation: fadeInUp 0.5s ease;}@keyframes fadeInUp {from {opacity: 0;transform: translateY(20px);}to {opacity: 1;transform: translateY(0);}}.chapter-header {display: flex;align-items: center;gap: 16px;margin-bottom: 32px;padding: 20px 24px;background: linear-gradient(135deg, var(--card-bg), var(--bg-color));border-radius: var(--radius);border: 2px solid var(--border-color);box-shadow: var(--shadow);}.chapter-header .chapter-icon {width: 60px;height: 60px;background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));border-radius: 50%;display: flex;align-items: center;justify-content: center;font-size: 22px;font-weight: 700;color: #fff;box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3);}.chapter-info {flex: 1;}.chapter-title {font-size: 24px;font-weight: 700;margin-bottom: 4px;}.chapter-desc {font-size: 14px;color: var(--text-secondary);}.chapter-progress {display: flex;align-items: center;gap: 12px;}.chapter-progress-bar {width: 120px;height: 6px;background: var(--border-color);border-radius: 3px;overflow: hidden;}.chapter-progress-fill {height: 100%;background: var(--primary-color);transition: width 0.5s ease;}.chapter-progress-text {font-size: 14px;font-weight: 600;color: var(--text-secondary);}.modules-grid {display: grid;grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));gap: 24px;padding: 0 20px;}.module-node {position: relative;display: flex;flex-direction: column;align-items: center;cursor: pointer;transition: var(--transition);}.module-node:hover {transform: translateY(-2px);}.module-circle {width: 80px;height: 80px;border-radius: 50%;display: flex;align-items: center;justify-content: center;font-size: 32px;position: relative;transition: var(--transition);box-shadow: var(--shadow-md);}.module-circle.locked {background: #f4f4f5;border: 2px solid var(--border-color);cursor: not-allowed;}.module-circle.available {background: var(--primary-color);animation: pulse 2s infinite;}.module-circle.completed {background: var(--success-color);}@keyframes pulse {0%, 100% {transform: scale(1);}50% {transform: scale(1.03);}}.module-node:hover .module-circle.available {transform: scale(1.05);box-shadow: var(--shadow-lg);}.module-label {margin-top: 12px;font-size: 13px;font-weight: 600;text-align: center;color: var(--text-secondary);max-width: 120px;line-height: 1.4;}.module-node:hover .module-label {color: var(--text-primary);}.module-status {position: absolute;top: -8px;right: -8px;width: 28px;height: 28px;border-radius: 50%;background: white;display: flex;align-items: center;justify-content: center;font-size: 16px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);}.module-connector {position: absolute;width: 40px;height: 4px;background: var(--border-color);top: 50%;right: -20px;transform: translateY(-50%);}.module-connector.completed {background: var(--primary-color);}.chapter-divider {width: 100%;height: 2px;background: linear-gradient(90deg, transparent, var(--border-color), transparent);margin: 40px 0;}.empty-state {text-align: center;padding: 60px 20px;color: var(--text-secondary);}.empty-state-icon {font-size: 64px;margin-bottom: 16px;opacity: 0.5;}.empty-state-text {font-size: 18px;margin-bottom: 8px;}@media (max-width: 768px) {.map-container {padding: 20px 10px;}.chapter-header {padding: 16px;}.chapter-icon {width: 48px;height: 48px;font-size: 24px;}.chapter-title {font-size: 20px;}.modules-grid {grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));gap: 16px;padding: 0 10px;}.module-circle {width: 64px;height: 64px;font-size: 24px;}.module-label {font-size: 12px;max-width: 100px;}}#lessonView {display: flex;flex-direction: column;height: 100%;}.lesson-header {display: flex;align-items: center;gap: 16px;padding: 20px 32px;background: var(--card-bg);border-bottom: 1px solid var(--border-color);}.btn-back {padding: 8px 16px;background: transparent;border: 1px solid var(--border-color);border-radius: var(--radius-sm);color: var(--text-secondary);font-size: 14px;font-weight: 500;cursor: pointer;transition: var(--transition);}.btn-back:hover {border-color: var(--primary-color);color: var(--primary-color);background: rgba(99, 102, 241, 0.05);}.lesson-header h2 {font-size: 20px;font-weight: 700;}.lesson-content {flex: 1;overflow-y: auto;padding: 32px;max-width: 900px;margin: 0 auto;width: 100%;}.lesson-card {background: var(--card-bg);border-radius: var(--radius);padding: 24px;margin-bottom: 24px;border: 1px solid var(--border-color);box-shadow: var(--shadow);animation: fadeIn 0.5s ease;}@keyframes fadeIn {from {opacity: 0;transform: translateY(10px);}to {opacity: 1;transform: translateY(0);}}.lesson-card h3 {font-size: 20px;font-weight: 700;margin-bottom: 16px;color: var(--text-primary);display: flex;align-items: center;gap: 8px;}.lesson-card h4 {font-size: 16px;font-weight: 600;margin: 16px 0 12px 0;color: var(--text-primary);}.lesson-card p {font-size: 15px;line-height: 1.8;color: var(--text-secondary);margin-bottom: 12px;}.lesson-card ul, .lesson-card ol {margin: 12px 0;padding-left: 24px;}.lesson-card li {font-size: 15px;line-height: 1.8;color: var(--text-secondary);margin-bottom: 8px;}.highlight-box {background: rgba(88, 204, 2, 0.1);border-left: 4px solid var(--primary-color);padding: 16px;border-radius: 8px;margin: 16px 0;}.highlight-box.info {background: rgba(0, 150, 255, 0.1);border-left-color: #0096ff;}.highlight-box.warning {background: rgba(255, 150, 0, 0.1);border-left-color: var(--warning-color);}.code-block {position: relative;margin: 16px 0;}.code-block-header {display: flex;align-items: center;justify-content: space-between;padding: 8px 16px;background: var(--code-header-bg, #21252b);border-radius: 8px 8px 0 0;border-bottom: 1px solid var(--code-border, #181a1f);}.code-block-lang {font-size: 12px;color: var(--code-text-dim, #abb2bf);font-weight: 600;}.btn-copy {padding: 4px 12px;background: transparent;border: 1px solid var(--code-btn-border, #3e4451);border-radius: 4px;color: var(--code-text-dim, #abb2bf);font-size: 12px;cursor: pointer;transition: var(--transition);}.btn-copy:hover {background: var(--code-btn-border, #3e4451);color: white;}.code-block pre {margin: 0;border-radius: 0 0 8px 8px;}.problem-card {background: var(--card-bg);border-radius: var(--radius);padding: 24px;margin-bottom: 24px;border: 1px solid var(--border-color);box-shadow: var(--shadow);}.problem-header {display: flex;align-items: center;justify-content: space-between;margin-bottom: 16px;padding-bottom: 16px;border-bottom: 1px solid var(--border-color);flex-wrap: wrap;gap: 8px;}.problem-title {font-size: 18px;font-weight: 700;}.problem-meta {display: flex;align-items: center;gap: 8px;}.problem-id {padding: 4px 12px;background: var(--primary-color);color: white;border-radius: 16px;font-size: 13px;font-weight: 600;}.problem-difficulty {padding: 3px 10px;border-radius: 12px;font-size: 12px;font-weight: 600;white-space: nowrap;}.difficulty-0 {background: #f3f4f6;color: #9ca3af;}.difficulty-1 {background: #f3f4f6;color: #6b7280;}.difficulty-2 {background: #fef2f2;color: #dc2626;}.difficulty-3 {background: #fff7ed;color: #ea580c;}.difficulty-4 {background: #fefce8;color: #ca8a04;}.difficulty-5 {background: #f0fdf4;color: #16a34a;}.difficulty-6 {background: #eff6ff;color: #2563eb;}.difficulty-7 {background: #f5f3ff;color: #7c3aed;}.fetch-notice {text-align: center;padding: 24px 16px;background: var(--bg-color);border-radius: 12px;border: 1px dashed var(--border-color);}.fetch-notice p {color: var(--text-secondary);margin-bottom: 12px;font-size: 14px;}.btn-retry {display: inline-flex;align-items: center;gap: 4px;padding: 8px 16px;background: var(--primary-color);color: white;border: none;border-radius: var(--radius-sm);font-size: 13px;font-weight: 500;cursor: pointer;transition: var(--transition);}.btn-retry:hover {opacity: 0.9;transform: translateY(-1px);}.problem-section {margin-bottom: 20px;}.problem-section h4 {font-size: 16px;font-weight: 600;margin-bottom: 12px;color: var(--primary-color);}.problem-section p {font-size: 15px;line-height: 1.8;color: var(--text-secondary);}.problem-section img, .lesson-content-text img {max-width: 100%;height: auto;border-radius: 6px;margin: 12px 0;display: block;}.sample-block {background: var(--bg-color);border-radius: 8px;padding: 16px;margin: 12px 0;border: 1px solid var(--border-color);}.sample-label {font-size: 12px;font-weight: 600;color: var(--text-secondary);margin-bottom: 8px;text-transform: uppercase;}.sample-content {font-family: 'Fira Code', 'Consolas', monospace;font-size: 14px;line-height: 1.6;color: var(--text-primary);white-space: pre-wrap;}.thinking-area {background: var(--card-bg);border-radius: var(--radius);padding: 24px;margin-bottom: 24px;border: 2px solid var(--border-color);}.thinking-area h4 {font-size: 18px;font-weight: 700;margin-bottom: 16px;display: flex;align-items: center;gap: 8px;}.thinking-textarea {width: 100%;min-height: 150px;padding: 16px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 15px;line-height: 1.6;resize: vertical;font-family: inherit;}.thinking-textarea:focus {outline: none;border-color: var(--primary-color);}.thinking-actions {display: flex;gap: 12px;margin-top: 16px;}.btn-ac {padding: 16px 32px;background: linear-gradient(135deg, var(--success-color), #46a302);color: white;border: none;border-radius: var(--radius);font-size: 18px;font-weight: 700;cursor: pointer;transition: var(--transition);box-shadow: 0 6px 0 #3d8b02;display: flex;align-items: center;gap: 8px;}.btn-ac:hover {transform: translateY(-2px);box-shadow: 0 8px 0 #3d8b02;}.btn-ac:active {transform: translateY(2px);box-shadow: 0 4px 0 #3d8b02;}.btn-ac.completed {background: linear-gradient(135deg, var(--accent-color), #ff6b00);box-shadow: 0 6px 0 #cc5500;}.ai-response {background: var(--card-bg);border-radius: var(--radius);padding: 24px;margin-bottom: 24px;border: 1px solid var(--border-color);animation: slideIn 0.5s ease;}@keyframes slideIn {from {opacity: 0;transform: translateX(-20px);}to {opacity: 1;transform: translateX(0);}}.ai-response h4 {font-size: 18px;font-weight: 700;margin-bottom: 16px;color: var(--primary-color);display: flex;align-items: center;gap: 8px;}.ai-response-content {font-size: 15px;line-height: 1.8;color: var(--text-secondary);}.ai-response-content p {margin-bottom: 12px;}.ai-response-content ul, .ai-response-content ol {margin: 12px 0;padding-left: 24px;}.ai-response-content li {margin-bottom: 8px;}.user-followup {display: flex;justify-content: flex-end;margin-bottom: 16px;animation: slideIn 0.4s ease;}.user-followup-content {max-width: 85%;padding: 12px 16px;border-radius: 12px;background: var(--primary-color);color: white;font-size: 14px;line-height: 1.6;border-bottom-right-radius: 4px;white-space: pre-wrap;word-break: break-word;}.followup-area {background: var(--card-bg);border-radius: var(--radius);padding: 20px;margin-bottom: 24px;border: 1px solid var(--border-color);}.followup-input {width: 100%;min-height: 80px;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;line-height: 1.6;resize: vertical;font-family: inherit;margin-bottom: 12px;}.followup-input:focus {outline: none;border-color: var(--primary-color);}.followup-actions {display: flex;gap: 12px;}@media (max-width: 768px) {.lesson-content {padding: 20px 16px;}.lesson-card, .problem-card, .thinking-area, .ai-response {padding: 16px;}.lesson-card h3 {font-size: 18px;}.problem-title {font-size: 16px;}.thinking-area h4 {font-size: 16px;}.btn-ac {padding: 12px 24px;font-size: 16px;}}.ai-fab {position: fixed;bottom: 32px;right: 32px;width: 64px;height: 64px;border-radius: 50%;background: var(--primary-color);border: none;cursor: pointer;box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);transition: var(--transition);z-index: 500;display: flex;align-items: center;justify-content: center;font-size: 28px;}.ai-fab:hover {transform: translateY(-2px);box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);background: var(--primary-dark);}.ai-fab:active {transform: translateY(0);}.ai-fab.active {background: var(--error-color);box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);}.ai-panel {position: fixed;bottom: 110px;right: 32px;width: 400px;height: 600px;background: var(--card-bg);border-radius: var(--radius-lg);box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);display: none;flex-direction: column;z-index: 499;animation: panelSlideUp 0.3s ease;border: 1px solid var(--border-color);}.ai-panel.active {display: flex;}@keyframes panelSlideUp {from {opacity: 0;transform: translateY(20px);}to {opacity: 1;transform: translateY(0);}}.ai-panel-header {display: flex;align-items: center;justify-content: space-between;padding: 16px 20px;border-bottom: 1px solid var(--border-color);background: linear-gradient(135deg, var(--card-bg), var(--bg-color));border-radius: var(--radius) var(--radius) 0 0;}.ai-panel-header h3 {font-size: 18px;font-weight: 700;display: flex;align-items: center;gap: 8px;}.ai-panel-body {flex: 1;overflow-y: auto;padding: 20px;}.ai-welcome {text-align: center;padding: 40px 20px;color: var(--text-secondary);}.ai-welcome p {font-size: 15px;line-height: 1.8;margin-bottom: 8px;}.chat-message {margin-bottom: 16px;animation: messageSlide 0.3s ease;}@keyframes messageSlide {from {opacity: 0;transform: translateY(10px);}to {opacity: 1;transform: translateY(0);}}.chat-message.user {display: flex;justify-content: flex-end;}.chat-message.assistant {display: flex;justify-content: flex-start;}.chat-bubble {max-width: 85%;padding: 12px 16px;border-radius: 12px;font-size: 14px;line-height: 1.6;}.chat-message.user .chat-bubble {background: var(--primary-color);color: white;border-bottom-right-radius: 4px;}.chat-message.assistant .chat-bubble {background: var(--bg-color);color: var(--text-primary);border: 1px solid var(--border-color);border-bottom-left-radius: 4px;}.chat-bubble p {margin-bottom: 8px;}.chat-bubble p:last-child {margin-bottom: 0;}.chat-bubble code {background: rgba(0, 0, 0, 0.2);padding: 2px 6px;border-radius: 4px;font-size: 13px;}.chat-bubble pre {background: var(--hljs-bg, #282c34);padding: 12px;border-radius: 8px;overflow-x: auto;margin: 8px 0;}.chat-bubble pre code {background: transparent;padding: 0;}.typing-indicator {display: flex;gap: 4px;padding: 12px 16px;}.typing-dot {width: 8px;height: 8px;border-radius: 50%;background: var(--text-secondary);animation: typingBounce 1.4s infinite;}.typing-dot:nth-child(2) {animation-delay: 0.2s;}.typing-dot:nth-child(3) {animation-delay: 0.4s;}@keyframes typingBounce {0%, 60%, 100% {transform: translateY(0);}30% {transform: translateY(-8px);}}.ai-panel-footer {padding: 16px 20px;border-top: 1px solid var(--border-color);background: var(--card-bg);border-radius: 0 0 var(--radius) var(--radius);}.ai-panel-footer textarea {width: 100%;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;line-height: 1.5;resize: none;font-family: inherit;margin-bottom: 12px;}.ai-panel-footer textarea:focus {outline: none;border-color: var(--primary-color);}.btn-send {width: 100%;padding: 12px;background: var(--primary-color);color: white;border: none;border-radius: 8px;font-size: 15px;font-weight: 600;cursor: pointer;transition: var(--transition);}.btn-send:hover {background: var(--primary-dark);}.btn-send:disabled {opacity: 0.5;cursor: not-allowed;}.quick-questions {display: flex;flex-wrap: wrap;gap: 8px;margin-top: 12px;}.quick-question-btn {padding: 6px 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 16px;color: var(--text-secondary);font-size: 12px;cursor: pointer;transition: var(--transition);}.quick-question-btn:hover {border-color: var(--primary-color);color: var(--primary-color);}@media (max-width: 768px) {.ai-panel {width: calc(100% - 32px);right: 16px;bottom: 96px;height: 500px;}.ai-fab {width: 56px;height: 56px;bottom: 24px;right: 24px;}.ai-fab-icon {font-size: 24px;}}
+* {margin: 0;padding: 0;box-sizing: border-box;}:root {--primary-color: #6366f1;--primary-dark: #4f46e5;--primary-light: #818cf8;--secondary-color: #8b5cf6;--accent-color: #f59e0b;--bg-color: #fafafa;--card-bg: #ffffff;--text-primary: #18181b;--text-secondary: #71717a;--border-color: #e4e4e7;--success-color: #10b981;--warning-color: #f59e0b;--error-color: #ef4444;--shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);--radius: 12px;--radius-sm: 8px;--radius-lg: 16px;--transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);--hljs-bg: #282c34;--code-header-bg: #21252b;--code-border: #181a1f;--code-text-dim: #abb2bf;--code-btn-border: #3e4451;}body {font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;background: var(--bg-color);color: var(--text-primary);overflow: hidden;height: 100vh;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;}#app {display: flex;flex-direction: column;height: 100vh;}#header {display: flex;align-items: center;justify-content: space-between;padding: 16px 32px;background: var(--card-bg);border-bottom: 1px solid var(--border-color);box-shadow: var(--shadow);z-index: 100;}.header-left {display: flex;align-items: center;gap: 12px;}.logo {display: flex;align-items: center;gap: 8px;font-size: 20px;font-weight: 700;}.logo-icon {font-size: 28px;}.logo-text {color: var(--text-primary);font-weight: 700;}.header-center {display: flex;align-items: center;gap: 12px;flex: 1;max-width: 400px;margin: 0 24px;}.progress-bar {flex: 1;height: 8px;background: var(--border-color);border-radius: 4px;overflow: hidden;}.progress-fill {height: 100%;background: var(--primary-color);width: 0%;transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);border-radius: 4px;}.progress-text {font-size: 14px;font-weight: 600;color: var(--text-secondary);min-width: 40px;}.header-right {display: flex;gap: 8px;}.btn-icon {width: 40px;height: 40px;border: none;background: transparent;border-radius: 8px;cursor: pointer;font-size: 20px;transition: var(--transition);display: flex;align-items: center;justify-content: center;}.btn-icon:hover {background: var(--border-color);transform: scale(1.05);}#mainContent {flex: 1;overflow: hidden;position: relative;}.view {display: none;height: 100%;overflow-y: auto;}.view.active {display: block;}::-webkit-scrollbar {width: 8px;height: 8px;}::-webkit-scrollbar-track {background: var(--bg-color);}::-webkit-scrollbar-thumb {background: var(--border-color);border-radius: 4px;}::-webkit-scrollbar-thumb:hover {background: var(--text-secondary);}.btn-primary {padding: 12px 24px;background: var(--primary-color);color: white;border: none;border-radius: var(--radius);font-size: 16px;font-weight: 600;cursor: pointer;transition: var(--transition);box-shadow: var(--shadow);}.btn-primary:hover {background: var(--primary-dark);box-shadow: var(--shadow-md);transform: translateY(-1px);}.btn-primary:active {transform: translateY(0);box-shadow: var(--shadow);}.btn-secondary {padding: 12px 24px;background: var(--card-bg);color: var(--text-primary);border: 1px solid var(--border-color);border-radius: var(--radius);font-size: 16px;font-weight: 600;cursor: pointer;transition: var(--transition);}.btn-secondary:hover {background: var(--bg-color);border-color: var(--primary-color);color: var(--primary-color);}.modal {display: none;position: fixed;top: 0;left: 0;width: 100%;height: 100%;z-index: 1000;align-items: center;justify-content: center;background: rgba(0, 0, 0, 0.4);backdrop-filter: blur(4px);-webkit-backdrop-filter: blur(4px);animation: fadeIn 0.2s ease;}.modal.active {display: flex;}.modal-overlay {position: absolute;top: 0;left: 0;width: 100%;height: 100%;}.modal-content {position: relative;background: var(--card-bg);border-radius: var(--radius);max-width: 600px;width: 90%;max-height: 80vh;overflow-y: auto;box-shadow: var(--shadow);animation: modalSlideIn 0.3s ease;}@keyframes modalSlideIn {from {opacity: 0;transform: translateY(-20px);}to {opacity: 1;transform: translateY(0);}}.modal-header {display: flex;align-items: center;justify-content: space-between;padding: 20px 24px;border-bottom: 1px solid var(--border-color);}.modal-header h2 {font-size: 20px;font-weight: 700;}.btn-close {width: 32px;height: 32px;border: none;background: transparent;border-radius: 8px;cursor: pointer;font-size: 18px;color: var(--text-secondary);transition: var(--transition);display: flex;align-items: center;justify-content: center;}.btn-close:hover {background: var(--border-color);color: var(--text-primary);}.modal-body {padding: 24px;}.setting-group {margin-bottom: 20px;}.setting-group label {display: block;margin-bottom: 8px;font-size: 14px;font-weight: 600;color: var(--text-secondary);}.setting-group input {width: 100%;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;transition: var(--transition);}.setting-group input:focus {outline: none;border-color: var(--primary-color);}[title] {position: relative;}.loading {display: inline-block;width: 20px;height: 20px;border: 3px solid var(--border-color);border-top-color: var(--primary-color);border-radius: 50%;animation: spin 0.8s linear infinite;}@keyframes spin {to {transform: rotate(360deg);}}pre {background: var(--hljs-bg, #282c34);border-radius: 8px;padding: 16px;overflow-x: auto;margin: 16px 0;}code {font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;font-size: 14px;line-height: 1.6;}.icon-btn {width: 40px;height: 40px;border: none;background: transparent;border-radius: 8px;cursor: pointer;font-size: 20px;transition: var(--transition);display: flex;align-items: center;justify-content: center;color: var(--text-primary);}.icon-btn:hover {background: var(--border-color);transform: scale(1.05);}.modal-close {width: 32px;height: 32px;border: none;background: transparent;border-radius: 8px;cursor: pointer;font-size: 22px;color: var(--text-secondary);transition: var(--transition);display: flex;align-items: center;justify-content: center;}.modal-close:hover {background: var(--border-color);color: var(--text-primary);}.form-group {margin-bottom: 20px;}.form-group label {display: block;margin-bottom: 8px;font-size: 14px;font-weight: 600;color: var(--text-secondary);}.form-group input {width: 100%;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;transition: var(--transition);}.form-group select {width: 100%;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;transition: var(--transition);cursor: pointer;appearance: none;-webkit-appearance: none;background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat: no-repeat;background-position: right 12px center;padding-right: 36px;}.form-group select:focus {outline: none;border-color: var(--primary-color);box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);}.form-group input:focus {outline: none;border-color: var(--primary-color);box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);}.stats-content {display: grid;grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));gap: 16px;}.stat-card {background: var(--bg-color);border-radius: var(--radius);padding: 20px;display: flex;align-items: center;gap: 16px;border: 1px solid var(--border-color);transition: var(--transition);}.stat-card:hover {border-color: var(--primary-color);transform: translateY(-2px);}.stat-icon {font-size: 32px;}.stat-info {display: flex;flex-direction: column;}.stat-value {font-size: 24px;font-weight: 700;color: var(--primary-color);}.stat-label {font-size: 13px;color: var(--text-secondary);margin-top: 2px;}.modal-header h3 {font-size: 20px;font-weight: 700;}@media (max-width: 768px) {#header {padding: 12px 16px;}.logo-text {font-size: 16px;}.header-center {max-width: 200px;margin: 0 12px;}.btn-icon {width: 36px;height: 36px;font-size: 18px;}}.ac-confirm-overlay {position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0,0,0,0.5);z-index: 10000;display: flex;align-items: center;justify-content: center;animation: fadeIn 0.2s ease;}.ac-confirm-dialog {background: var(--card-bg, #fff);border-radius: var(--radius-lg, 16px);padding: 32px;max-width: 420px;width: 90%;text-align: center;box-shadow: var(--shadow-lg);animation: slideUp 0.25s ease;}.ac-confirm-icon {font-size: 48px;margin-bottom: 12px;}.ac-confirm-dialog h3 {font-size: 20px;font-weight: 700;margin-bottom: 8px;color: var(--text-primary, #18181b);}.ac-confirm-dialog p {color: var(--text-secondary, #71717a);margin-bottom: 20px;line-height: 1.6;font-size: 15px;}.ac-confirm-buttons {display: flex;gap: 12px;justify-content: center;}.ac-confirm-buttons .btn-secondary {padding: 10px 20px;border-radius: var(--radius-sm, 8px);border: 1px solid var(--border-color);background: #fff;color: var(--text-secondary);cursor: pointer;font-size: 14px;transition: var(--transition);}.ac-confirm-buttons .btn-secondary:hover {background: #f4f4f5;}.ac-confirm-buttons .btn-ac-confirm {padding: 10px 20px;border-radius: var(--radius-sm, 8px);border: none;background: var(--primary-color, #6366f1);color: #fff;cursor: pointer;font-size: 14px;font-weight: 600;transition: var(--transition);}.ac-confirm-buttons .btn-ac-confirm:hover {background: var(--primary-dark, #4f46e5);}.custom-toast {position: fixed;bottom: 30px;left: 50%;transform: translateX(-50%) translateY(100px);background: var(--success-color, #10b981);color: #fff;padding: 14px 28px;border-radius: var(--radius, 12px);font-size: 15px;font-weight: 600;z-index: 10001;box-shadow: var(--shadow-lg);transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);}.custom-toast.show {transform: translateX(-50%) translateY(0);}.custom-toast.error {background: var(--error-color, #ef4444);}@keyframes fadeIn {from {opacity: 0;}to {opacity: 1;}}@keyframes slideUp {from {opacity: 0;transform: translateY(30px);}to {opacity: 1;transform: translateY(0);}}.color-picker-row {display: flex;align-items: center;gap: 12px;}.color-picker-row input[type="color"] {width: 42px;height: 42px;border: 2px solid var(--border-color);border-radius: 8px;cursor: pointer;padding: 2px;background: none;}.color-picker-row input[type="color"]:hover {border-color: var(--primary-color);}.color-hex {font-family: 'Fira Code', 'Consolas', monospace;font-size: 14px;font-weight: 600;color: var(--text-primary);min-width: 70px;}.btn-reset-color {padding: 6px 14px;border: 1px solid var(--border-color);border-radius: 6px;background: var(--bg-color);color: var(--text-secondary);font-size: 13px;cursor: pointer;transition: var(--transition);}.btn-reset-color:hover {border-color: var(--primary-color);color: var(--primary-color);}.map-container {padding: 40px 20px;max-width: 1200px;margin: 0 auto;}.part-section {margin-bottom: 48px;}.part-header {margin-bottom: 24px;padding: 16px 24px;background: var(--card-bg);border-radius: var(--radius);border: 1px solid var(--border-color);box-shadow: var(--shadow);}.part-header h2 {font-size: 20px;font-weight: 700;color: var(--text-primary);margin: 0;}.learning-path {display: flex;flex-direction: column;gap: 20px;align-items: center;padding: 20px 0;}.chapter-node {display: flex;align-items: center;gap: 20px;padding: 16px 24px;background: var(--card-bg);border-radius: var(--radius-lg);border: 1px solid var(--border-color);cursor: pointer;transition: var(--transition);max-width: 500px;width: 100%;box-shadow: var(--shadow);}.chapter-node:hover {transform: translateY(-2px);border-color: var(--primary-color);box-shadow: var(--shadow-lg);}.chapter-node.locked {opacity: 0.5;cursor: not-allowed;}.chapter-node.locked:hover {transform: none;border-color: var(--border-color);box-shadow: var(--shadow);}.chapter-circle {width: 64px;height: 64px;border-radius: 50%;display: flex;align-items: center;justify-content: center;font-size: 28px;flex-shrink: 0;position: relative;transition: var(--transition);}.chapter-circle.locked {background: #f4f4f5;border: 2px solid var(--border-color);color: #a1a1aa;}.chapter-circle.available {background: var(--primary-color);box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);color: #fff;}.chapter-circle.completed {background: var(--success-color);box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);color: #fff;}.chapter-circle.in-progress {background: var(--accent-color);box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);color: #fff;}.chapter-circle .chapter-icon {font-size: 18px;font-weight: 700;letter-spacing: -0.5px;color: inherit;}.chapter-badge {position: absolute;top: -4px;right: -4px;width: 24px;height: 24px;background: white;border-radius: 50%;display: flex;align-items: center;justify-content: center;font-size: 14px;color: var(--success-color);font-weight: bold;box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);}.chapter-info {flex: 1;min-width: 0;}.chapter-title {font-size: 16px;font-weight: 600;color: var(--text-primary);margin-bottom: 8px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;}.chapter-progress {display: flex;align-items: center;gap: 12px;}.chapter-progress .progress-bar {flex: 1;height: 8px;background: var(--border-color);border-radius: 4px;overflow: hidden;}.chapter-progress .progress-fill {height: 100%;background: var(--primary-color);transition: width 0.3s ease;}.chapter-progress .progress-text {font-size: 14px;color: var(--text-secondary);font-weight: 500;white-space: nowrap;}.chapter-section {margin-bottom: 60px;animation: fadeInUp 0.5s ease;}@keyframes fadeInUp {from {opacity: 0;transform: translateY(20px);}to {opacity: 1;transform: translateY(0);}}.chapter-header {display: flex;align-items: center;gap: 16px;margin-bottom: 32px;padding: 20px 24px;background: linear-gradient(135deg, var(--card-bg), var(--bg-color));border-radius: var(--radius);border: 2px solid var(--border-color);box-shadow: var(--shadow);}.chapter-header .chapter-icon {width: 60px;height: 60px;background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));border-radius: 50%;display: flex;align-items: center;justify-content: center;font-size: 22px;font-weight: 700;color: #fff;box-shadow: 0 4px 12px rgba(88, 204, 2, 0.3);}.chapter-info {flex: 1;}.chapter-title {font-size: 24px;font-weight: 700;margin-bottom: 4px;}.chapter-desc {font-size: 14px;color: var(--text-secondary);}.chapter-progress {display: flex;align-items: center;gap: 12px;}.chapter-progress-bar {width: 120px;height: 6px;background: var(--border-color);border-radius: 3px;overflow: hidden;}.chapter-progress-fill {height: 100%;background: var(--primary-color);transition: width 0.5s ease;}.chapter-progress-text {font-size: 14px;font-weight: 600;color: var(--text-secondary);}.modules-grid {display: grid;grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));gap: 24px;padding: 0 20px;}.module-node {position: relative;display: flex;flex-direction: column;align-items: center;cursor: pointer;transition: var(--transition);}.module-node:hover {transform: translateY(-2px);}.module-circle {width: 80px;height: 80px;border-radius: 50%;display: flex;align-items: center;justify-content: center;font-size: 32px;position: relative;transition: var(--transition);box-shadow: var(--shadow-md);}.module-circle.locked {background: #f4f4f5;border: 2px solid var(--border-color);cursor: not-allowed;}.module-circle.available {background: var(--primary-color);animation: pulse 2s infinite;}.module-circle.completed {background: var(--success-color);}@keyframes pulse {0%, 100% {transform: scale(1);}50% {transform: scale(1.03);}}.module-node:hover .module-circle.available {transform: scale(1.05);box-shadow: var(--shadow-lg);}.module-label {margin-top: 12px;font-size: 13px;font-weight: 600;text-align: center;color: var(--text-secondary);max-width: 120px;line-height: 1.4;}.module-node:hover .module-label {color: var(--text-primary);}.module-status {position: absolute;top: -8px;right: -8px;width: 28px;height: 28px;border-radius: 50%;background: white;display: flex;align-items: center;justify-content: center;font-size: 16px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);}.module-connector {position: absolute;width: 40px;height: 4px;background: var(--border-color);top: 50%;right: -20px;transform: translateY(-50%);}.module-connector.completed {background: var(--primary-color);}.chapter-divider {width: 100%;height: 2px;background: linear-gradient(90deg, transparent, var(--border-color), transparent);margin: 40px 0;}.empty-state {text-align: center;padding: 60px 20px;color: var(--text-secondary);}.empty-state-icon {font-size: 64px;margin-bottom: 16px;opacity: 0.5;}.empty-state-text {font-size: 18px;margin-bottom: 8px;}@media (max-width: 768px) {.map-container {padding: 20px 10px;}.chapter-header {padding: 16px;}.chapter-icon {width: 48px;height: 48px;font-size: 24px;}.chapter-title {font-size: 20px;}.modules-grid {grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));gap: 16px;padding: 0 10px;}.module-circle {width: 64px;height: 64px;font-size: 24px;}.module-label {font-size: 12px;max-width: 100px;}}#lessonView {display: flex;flex-direction: column;height: 100%;}.lesson-header {display: flex;align-items: center;gap: 16px;padding: 20px 32px;background: var(--card-bg);border-bottom: 1px solid var(--border-color);}.btn-back {padding: 8px 16px;background: transparent;border: 1px solid var(--border-color);border-radius: var(--radius-sm);color: var(--text-secondary);font-size: 14px;font-weight: 500;cursor: pointer;transition: var(--transition);}.btn-back:hover {border-color: var(--primary-color);color: var(--primary-color);background: rgba(99, 102, 241, 0.05);}.lesson-header h2 {font-size: 20px;font-weight: 700;}.lesson-content {flex: 1;overflow-y: auto;padding: 32px;max-width: 900px;margin: 0 auto;width: 100%;}.lesson-card {background: var(--card-bg);border-radius: var(--radius);padding: 24px;margin-bottom: 24px;border: 1px solid var(--border-color);box-shadow: var(--shadow);animation: fadeIn 0.5s ease;}@keyframes fadeIn {from {opacity: 0;transform: translateY(10px);}to {opacity: 1;transform: translateY(0);}}.lesson-card h3 {font-size: 20px;font-weight: 700;margin-bottom: 16px;color: var(--text-primary);display: flex;align-items: center;gap: 8px;}.lesson-card h4 {font-size: 16px;font-weight: 600;margin: 16px 0 12px 0;color: var(--text-primary);}.lesson-card p {font-size: 15px;line-height: 1.8;color: var(--text-secondary);margin-bottom: 12px;}.lesson-card ul, .lesson-card ol {margin: 12px 0;padding-left: 24px;}.lesson-card li {font-size: 15px;line-height: 1.8;color: var(--text-secondary);margin-bottom: 8px;}.highlight-box {background: rgba(88, 204, 2, 0.1);border-left: 4px solid var(--primary-color);padding: 16px;border-radius: 8px;margin: 16px 0;}.highlight-box.info {background: rgba(0, 150, 255, 0.1);border-left-color: #0096ff;}.highlight-box.warning {background: rgba(255, 150, 0, 0.1);border-left-color: var(--warning-color);}.code-block {position: relative;margin: 16px 0;}.code-block-header {display: flex;align-items: center;justify-content: space-between;padding: 8px 16px;background: var(--code-header-bg, #21252b);border-radius: 8px 8px 0 0;border-bottom: 1px solid var(--code-border, #181a1f);}.code-block-lang {font-size: 12px;color: var(--code-text-dim, #abb2bf);font-weight: 600;}.btn-copy {padding: 4px 12px;background: transparent;border: 1px solid var(--code-btn-border, #3e4451);border-radius: 4px;color: var(--code-text-dim, #abb2bf);font-size: 12px;cursor: pointer;transition: var(--transition);}.btn-copy:hover {background: var(--code-btn-border, #3e4451);color: white;}.code-block pre {margin: 0;border-radius: 0 0 8px 8px;}.problem-card {background: var(--card-bg);border-radius: var(--radius);padding: 24px;margin-bottom: 24px;border: 1px solid var(--border-color);box-shadow: var(--shadow);}.problem-header {display: flex;align-items: center;justify-content: space-between;margin-bottom: 16px;padding-bottom: 16px;border-bottom: 1px solid var(--border-color);flex-wrap: wrap;gap: 8px;}.problem-title {font-size: 18px;font-weight: 700;}.problem-meta {display: flex;align-items: center;gap: 8px;}.problem-id {padding: 4px 12px;background: var(--primary-color);color: white;border-radius: 16px;font-size: 13px;font-weight: 600;}.problem-difficulty {padding: 3px 10px;border-radius: 12px;font-size: 12px;font-weight: 600;white-space: nowrap;}.difficulty-0 {background: #f3f4f6;color: #9ca3af;}.difficulty-1 {background: #f3f4f6;color: #6b7280;}.difficulty-2 {background: #fef2f2;color: #dc2626;}.difficulty-3 {background: #fff7ed;color: #ea580c;}.difficulty-4 {background: #fefce8;color: #ca8a04;}.difficulty-5 {background: #f0fdf4;color: #16a34a;}.difficulty-6 {background: #eff6ff;color: #2563eb;}.difficulty-7 {background: #f5f3ff;color: #7c3aed;}.fetch-notice {text-align: center;padding: 24px 16px;background: var(--bg-color);border-radius: 12px;border: 1px dashed var(--border-color);}.fetch-notice p {color: var(--text-secondary);margin-bottom: 12px;font-size: 14px;}.btn-retry {display: inline-flex;align-items: center;gap: 4px;padding: 8px 16px;background: var(--primary-color);color: white;border: none;border-radius: var(--radius-sm);font-size: 13px;font-weight: 500;cursor: pointer;transition: var(--transition);}.btn-retry:hover {opacity: 0.9;transform: translateY(-1px);}.problem-section {margin-bottom: 20px;}.problem-section h4 {font-size: 16px;font-weight: 600;margin-bottom: 12px;color: var(--primary-color);}.problem-section p {font-size: 15px;line-height: 1.8;color: var(--text-secondary);}.problem-section img, .lesson-content-text img {max-width: 100%;height: auto;border-radius: 6px;margin: 12px 0;display: block;}.sample-block {background: var(--bg-color);border-radius: 8px;padding: 16px;margin: 12px 0;border: 1px solid var(--border-color);}.sample-label {font-size: 12px;font-weight: 600;color: var(--text-secondary);margin-bottom: 8px;text-transform: uppercase;}.sample-content {font-family: 'Fira Code', 'Consolas', monospace;font-size: 14px;line-height: 1.6;color: var(--text-primary);white-space: pre-wrap;}.thinking-area {background: var(--card-bg);border-radius: var(--radius);padding: 24px;margin-bottom: 24px;border: 2px solid var(--border-color);}.thinking-area h4 {font-size: 18px;font-weight: 700;margin-bottom: 16px;display: flex;align-items: center;gap: 8px;}.thinking-textarea {width: 100%;min-height: 150px;padding: 16px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 15px;line-height: 1.6;resize: vertical;font-family: inherit;}.thinking-textarea:focus {outline: none;border-color: var(--primary-color);}.thinking-actions {display: flex;gap: 12px;margin-top: 16px;}.btn-ac {padding: 16px 32px;background: linear-gradient(135deg, var(--success-color), #46a302);color: white;border: none;border-radius: var(--radius);font-size: 18px;font-weight: 700;cursor: pointer;transition: var(--transition);box-shadow: 0 6px 0 #3d8b02;display: flex;align-items: center;gap: 8px;}.btn-ac:hover {transform: translateY(-2px);box-shadow: 0 8px 0 #3d8b02;}.btn-ac:active {transform: translateY(2px);box-shadow: 0 4px 0 #3d8b02;}.btn-ac.completed {background: linear-gradient(135deg, var(--accent-color), #ff6b00);box-shadow: 0 6px 0 #cc5500;}.ai-response {background: var(--card-bg);border-radius: var(--radius);padding: 24px;margin-bottom: 24px;border: 1px solid var(--border-color);animation: slideIn 0.5s ease;}@keyframes slideIn {from {opacity: 0;transform: translateX(-20px);}to {opacity: 1;transform: translateX(0);}}.ai-response h4 {font-size: 18px;font-weight: 700;margin-bottom: 16px;color: var(--primary-color);display: flex;align-items: center;gap: 8px;}.ai-response-content {font-size: 15px;line-height: 1.8;color: var(--text-secondary);}.ai-response-content p {margin-bottom: 12px;}.ai-response-content ul, .ai-response-content ol {margin: 12px 0;padding-left: 24px;}.ai-response-content li {margin-bottom: 8px;}.user-followup {display: flex;justify-content: flex-end;margin-bottom: 16px;animation: slideIn 0.4s ease;}.user-followup-content {max-width: 85%;padding: 12px 16px;border-radius: 12px;background: var(--primary-color);color: white;font-size: 14px;line-height: 1.6;border-bottom-right-radius: 4px;white-space: pre-wrap;word-break: break-word;}.followup-area {background: var(--card-bg);border-radius: var(--radius);padding: 20px;margin-bottom: 24px;border: 1px solid var(--border-color);}.followup-input {width: 100%;min-height: 80px;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;line-height: 1.6;resize: vertical;font-family: inherit;margin-bottom: 12px;}.followup-input:focus {outline: none;border-color: var(--primary-color);}.followup-actions {display: flex;gap: 12px;}@media (max-width: 768px) {.lesson-content {padding: 20px 16px;}.lesson-card, .problem-card, .thinking-area, .ai-response {padding: 16px;}.lesson-card h3 {font-size: 18px;}.problem-title {font-size: 16px;}.thinking-area h4 {font-size: 16px;}.btn-ac {padding: 12px 24px;font-size: 16px;}}.translating-notice {display: flex;align-items: center;flex-wrap: wrap;gap: 4px;padding: 10px 14px;margin-bottom: 8px;border: 1px dashed var(--border-color);border-radius: var(--radius, 10px);background: var(--bg-color);color: var(--text-secondary);font-size: 13px;line-height: 1.6;}.ai-fab {position: fixed;bottom: 32px;right: 32px;width: 64px;height: 64px;border-radius: 50%;background: var(--primary-color);border: none;cursor: pointer;box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);transition: var(--transition);z-index: 500;display: flex;align-items: center;justify-content: center;font-size: 28px;}.ai-fab:hover {transform: translateY(-2px);box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);background: var(--primary-dark);}.ai-fab:active {transform: translateY(0);}.ai-fab.active {background: var(--error-color);box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);}.ai-panel {position: fixed;bottom: 110px;right: 32px;width: 400px;height: 600px;background: var(--card-bg);border-radius: var(--radius-lg);box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);display: none;flex-direction: column;z-index: 499;animation: panelSlideUp 0.3s ease;border: 1px solid var(--border-color);}.ai-panel.active {display: flex;}@keyframes panelSlideUp {from {opacity: 0;transform: translateY(20px);}to {opacity: 1;transform: translateY(0);}}.ai-panel-header {display: flex;align-items: center;justify-content: space-between;padding: 16px 20px;border-bottom: 1px solid var(--border-color);background: linear-gradient(135deg, var(--card-bg), var(--bg-color));border-radius: var(--radius) var(--radius) 0 0;}.ai-panel-header h3 {font-size: 18px;font-weight: 700;display: flex;align-items: center;gap: 8px;}.ai-panel-body {flex: 1;overflow-y: auto;padding: 20px;}.ai-welcome {text-align: center;padding: 40px 20px;color: var(--text-secondary);}.ai-welcome p {font-size: 15px;line-height: 1.8;margin-bottom: 8px;}.chat-message {margin-bottom: 16px;animation: messageSlide 0.3s ease;}@keyframes messageSlide {from {opacity: 0;transform: translateY(10px);}to {opacity: 1;transform: translateY(0);}}.chat-message.user {display: flex;justify-content: flex-end;}.chat-message.assistant {display: flex;justify-content: flex-start;}.chat-bubble {max-width: 85%;padding: 12px 16px;border-radius: 12px;font-size: 14px;line-height: 1.6;}.chat-message.user .chat-bubble {background: var(--primary-color);color: white;border-bottom-right-radius: 4px;}.chat-message.assistant .chat-bubble {background: var(--bg-color);color: var(--text-primary);border: 1px solid var(--border-color);border-bottom-left-radius: 4px;}.chat-bubble p {margin-bottom: 8px;}.chat-bubble p:last-child {margin-bottom: 0;}.chat-bubble code {background: rgba(0, 0, 0, 0.2);padding: 2px 6px;border-radius: 4px;font-size: 13px;}.chat-bubble pre {background: var(--hljs-bg, #282c34);padding: 12px;border-radius: 8px;overflow-x: auto;margin: 8px 0;}.chat-bubble pre code {background: transparent;padding: 0;}.typing-indicator {display: flex;gap: 4px;padding: 12px 16px;}.typing-dot {width: 8px;height: 8px;border-radius: 50%;background: var(--text-secondary);animation: typingBounce 1.4s infinite;}.typing-dot:nth-child(2) {animation-delay: 0.2s;}.typing-dot:nth-child(3) {animation-delay: 0.4s;}@keyframes typingBounce {0%, 60%, 100% {transform: translateY(0);}30% {transform: translateY(-8px);}}.ai-panel-footer {padding: 16px 20px;border-top: 1px solid var(--border-color);background: var(--card-bg);border-radius: 0 0 var(--radius) var(--radius);}.ai-panel-footer textarea {width: 100%;padding: 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 8px;color: var(--text-primary);font-size: 14px;line-height: 1.5;resize: none;font-family: inherit;margin-bottom: 12px;}.ai-panel-footer textarea:focus {outline: none;border-color: var(--primary-color);}.btn-send {width: 100%;padding: 12px;background: var(--primary-color);color: white;border: none;border-radius: 8px;font-size: 15px;font-weight: 600;cursor: pointer;transition: var(--transition);}.btn-send:hover {background: var(--primary-dark);}.btn-send:disabled {opacity: 0.5;cursor: not-allowed;}.quick-questions {display: flex;flex-wrap: wrap;gap: 8px;margin-top: 12px;}.quick-question-btn {padding: 6px 12px;background: var(--bg-color);border: 1px solid var(--border-color);border-radius: 16px;color: var(--text-secondary);font-size: 12px;cursor: pointer;transition: var(--transition);}.quick-question-btn:hover {border-color: var(--primary-color);color: var(--primary-color);}.thinking-status {display: flex;align-items: center;gap: 6px;font-size: 13px;color: var(--text-secondary);margin-bottom: 8px;}.thinking-emoji {display: inline-block;animation: thinkingPulse 1.2s ease-in-out infinite;}@keyframes thinkingPulse {0%, 100% {transform: scale(1);opacity: 0.7;}50% {transform: scale(1.15);opacity: 1;}}.reasoning-block {margin-bottom: 10px;border: 1px solid var(--border-color);border-radius: var(--radius, 10px);background: var(--bg-color);overflow: hidden;}.reasoning-block summary {cursor: pointer;padding: 8px 12px;font-size: 13px;color: var(--text-secondary);user-select: none;list-style: none;}.reasoning-block summary::before {content: '▸ ';}.reasoning-block[open] summary::before {content: '▾ ';}.reasoning-content {padding: 10px 12px;font-size: 13px;line-height: 1.7;color: var(--text-secondary);white-space: pre-wrap;word-break: break-word;max-height: 220px;overflow-y: auto;border-top: 1px dashed var(--border-color);}.checkbox-label {display: flex;align-items: center;gap: 8px;font-size: 14px;cursor: pointer;line-height: 1.5;}.checkbox-label input[type="checkbox"] {width: 16px;height: 16px;accent-color: var(--primary-color);flex-shrink: 0;}@media (max-width: 768px) {.ai-panel {width: calc(100% - 32px);right: 16px;bottom: 96px;height: 500px;}.ai-fab {width: 56px;height: 56px;bottom: 24px;right: 24px;}.ai-fab-icon {font-size: 24px;}}
 </style>
 </head>
 <body>
@@ -169,6 +169,12 @@
                         <select id="settingModel">
                             <option value="">请先选择服务商</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="settingDeepThinking" checked>
+                            <span>深度思考模式（AI 先深入推理再回答，更慢但更聪明）</span>
+                        </label>
                     </div>
                     <div class="form-group">
                         <label>洛谷用户名</label>
@@ -49978,9 +49984,10 @@ const Storage = {
       aiName: '',
       provider: 'openai',
       apiKey: '',
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini',
       luoguUser: '',
-      themeColor: '#6366f1'
+      themeColor: '#6366f1',
+      deepThinking: true
     };
   },
 
@@ -50041,7 +50048,7 @@ const AI = {
     baidu: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat',
     moonshot: 'https://api.moonshot.cn/v1/chat/completions',
     yi: 'https://api.lingyiwanwu.com/v1/chat/completions',
-    minimax: 'https://api.minimax.chat/v1/text/chatcompletion_pro',
+    minimax: 'https://api.minimax.chat/v1/text/chatcompletion_v2',
     siliconflow: 'https://api.siliconflow.cn/v1/chat/completions'
   },
 
@@ -50078,21 +50085,37 @@ ${context || '学生正在学习 OI 相关知识'}`;
     return this.providerUrls[provider] || this.providerUrls.openai;
   },
 
-  // 发送到指定提供商
-  async sendToProvider(provider, message, context, apiKey, model, isValidation = false) {
+  // 发送到指定提供商（支持深度思考，失败自动回退普通模式）
+  async sendToProvider(provider, message, context, apiKey, model, isValidation = false, deepThinking = false) {
     const systemPrompt = this.getSystemPrompt(context);
     const apiUrl = this.getProviderUrl(provider);
 
-    switch (provider) {
-      case 'anthropic':
-        return await this.sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation);
-      case 'google':
-        return await this.sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation);
-      case 'baidu':
-        return await this.sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation);
-      default:
-        return await this.sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation);
+    const dispatch = (dt) => {
+      switch (provider) {
+        case 'anthropic':
+          return this.sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation, dt);
+        case 'google':
+          return this.sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation, dt);
+        case 'baidu':
+          return this.sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation, dt);
+        default:
+          return this.sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation, dt);
+      }
+    };
+
+    let result = await dispatch(deepThinking);
+    // 厂商/模型不支持思考参数时会报错，自动降级为普通模式重试一次（认证/配额错误除外）
+    if (!result.success && deepThinking && !isValidation && this._shouldFallbackToPlain(result)) {
+      console.warn('深度思考请求失败，自动回退为普通模式重试:', result.message);
+      result = await dispatch(false);
     }
+    return result;
+  },
+
+  // 判断是否应回退为普通模式重试（认证/配额类错误与思考参数无关，无需重试）
+  _shouldFallbackToPlain(result) {
+    const m = String((result && result.message) || '');
+    return !/401|403|429|api\s*key|密钥|quota|余额|欠费/i.test(m);
   },
 
   // 通用超时包装器（Promise.race 安全网）
@@ -50111,26 +50134,57 @@ ${context || '学生正在学习 OI 相关知识'}`;
     }
   },
 
-  // 构建 OpenAI 兼容请求体（处理 DeepSeek V4 思考模式）
-  _buildOpenAIBody(model, messages, provider, isValidation) {
+  // 构建 OpenAI 兼容请求体（支持深度思考模式）
+  _buildOpenAIBody(model, messages, provider, isValidation, deepThinking = false) {
+    // 开启思考后思维链会占用输出额度，需大幅提高 max_tokens，
+    // 否则推理耗尽额度会导致 content 为空或回答被截断。
     const body = {
       model: model,
       messages: messages,
-      max_tokens: isValidation ? 50 : 2000
+      max_tokens: isValidation ? 50 : (deepThinking ? 8192 : 2000)
     };
-    if (provider === 'deepseek') {
-      // DeepSeek V4 默认开启思考模式，思维链会占用 max_tokens 导致 content 为空，
-      // 这里显式关闭思考，让最终答案直接输出到 content 字段。
-      body.thinking = { type: 'disabled' };
-    } else {
-      body.temperature = 0.7;
+    if (!deepThinking || isValidation) {
+      if (provider === 'deepseek') {
+        // deepseek-chat (V3.1+) 开启思考后思维链会占用 max_tokens 导致 content 为空，
+        // 普通模式显式关闭思考，让最终答案直接输出到 content 字段；
+        // deepseek-reasoner (R1) 始终输出推理、不接受 thinking 参数，故跳过。
+        if (!/reasoner|\br1\b/i.test(model)) {
+          body.thinking = { type: 'disabled' };
+        }
+      } else {
+        // o 系列推理模型 (o1/o3/o4-mini) 不支持 temperature 参数，跳过避免报错
+        if (!/^o\d/i.test(model)) {
+          body.temperature = 0.7;
+        }
+      }
+      return body;
+    }
+    // 深度思考模式：仅为支持思考参数的厂商/模型携带对应参数，
+    // 其余厂商 (openai/moonshot/yi/minimax/custom) 直接以默认配置请求，
+    // o3/o4-mini/MiniMax-M1 等推理模型本身就会输出推理，无需额外参数。
+    // 若某模型不支持对应参数导致报错，上层会自动回退为普通模式重试。
+    switch (provider) {
+      case 'qwen':
+      case 'siliconflow':
+        body.enable_thinking = true;
+        break;
+      case 'deepseek':
+        // deepseek-chat 需显式开启思考；reasoner 已自带推理，不传该参数
+        if (!/reasoner|\br1\b/i.test(model)) {
+          body.thinking = { type: 'enabled' };
+        }
+        break;
+      case 'zhipu':
+        body.thinking = { type: 'enabled' };
+        break;
     }
     return body;
   },
 
   // 发送到 OpenAI 兼容接口
-  async sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation) {
-    const fetchTimeout = isValidation ? 12000 : 45000;  // 验证12s，正常45s
+  async sendToOpenAICompatible(message, systemPrompt, apiKey, apiUrl, model, provider, isValidation, deepThinking = false) {
+    // 深度思考耗时明显更长，超时时间相应放宽
+    const fetchTimeout = isValidation ? 12000 : (deepThinking ? 120000 : 45000);
     const totalTimeout = fetchTimeout + 5000;            // 整体多5s缓冲
     const operation = async () => {
       const response = await fetch(apiUrl, {
@@ -50142,7 +50196,7 @@ ${context || '学生正在学习 OI 相关知识'}`;
         body: JSON.stringify(this._buildOpenAIBody(model, [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
-        ], provider, isValidation)),
+        ], provider, isValidation, deepThinking)),
         signal: AbortSignal.timeout(fetchTimeout)
       });
 
@@ -50154,15 +50208,16 @@ ${context || '学生正在学习 OI 相关知识'}`;
       const data = await response.json();
       const msg = data.choices && data.choices[0] && data.choices[0].message;
       let content = msg && msg.content;
-      // DeepSeek V4 兜底：思考模式下 content 可能为空，答案在 reasoning_content
-      if (!content && msg && msg.reasoning_content) {
-        content = msg.reasoning_content;
+      const reasoning = (msg && msg.reasoning_content) || '';
+      // 思考模式兜底：content 可能为空，答案在 reasoning_content
+      if (!content && reasoning) {
+        content = reasoning;
       }
       if (!content) {
         console.warn('API 返回空内容，完整响应:', JSON.stringify(data));
         throw new Error('AI 返回了空内容，请检查模型是否可用或API Key是否有效');
       }
-      return { success: true, message: content };
+      return { success: true, message: content, reasoning };
     };
 
     try {
@@ -50177,10 +50232,20 @@ ${context || '学生正在学习 OI 相关知识'}`;
   },
 
   // 发送到 Anthropic (Claude)
-  async sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
-    const fetchTimeout = isValidation ? 12000 : 45000;
+  async sendToAnthropic(message, systemPrompt, apiKey, apiUrl, model, isValidation, deepThinking = false) {
+    const fetchTimeout = isValidation ? 12000 : (deepThinking ? 180000 : 45000);
     const totalTimeout = fetchTimeout + 5000;
     const operation = async () => {
+      const body = {
+        model: model,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: message }],
+        max_tokens: isValidation ? 50 : (deepThinking ? 8000 : 2000)
+      };
+      if (deepThinking && !isValidation) {
+        // 扩展思考：budget_tokens 必须小于 max_tokens，且不可与 temperature 同用
+        body.thinking = { type: 'enabled', budget_tokens: 4000 };
+      }
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -50189,12 +50254,7 @@ ${context || '学生正在学习 OI 相关知识'}`;
           'anthropic-version': '2023-06-01',
           'anthropic-dangerous-direct-browser-access': 'true'
         },
-        body: JSON.stringify({
-          model: model,
-          system: systemPrompt,
-          messages: [{ role: 'user', content: message }],
-          max_tokens: isValidation ? 50 : 2000
-        }),
+        body: JSON.stringify(body),
         signal: AbortSignal.timeout(fetchTimeout)
       });
 
@@ -50223,11 +50283,20 @@ ${context || '学生正在学习 OI 相关知识'}`;
   },
 
   // 发送到 Google (Gemini)
-  async sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
-    const fetchTimeout = isValidation ? 12000 : 45000;
+  async sendToGoogle(message, systemPrompt, apiKey, apiUrl, model, isValidation, deepThinking = false) {
+    const fetchTimeout = isValidation ? 12000 : (deepThinking ? 180000 : 45000);
     const totalTimeout = fetchTimeout + 5000;
     const operation = async () => {
       const url = `${apiUrl}/${model}:generateContent?key=${apiKey}`;
+      const generationConfig = {
+        temperature: 0.7,
+        maxOutputTokens: isValidation ? 50 : 2000
+      };
+      if (deepThinking && !isValidation) {
+        generationConfig.maxOutputTokens = 8000;
+        // thinkingBudget: -1 表示动态思考；includeThoughts 返回思考摘要
+        generationConfig.thinkingConfig = { thinkingBudget: -1, includeThoughts: true };
+      }
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50236,10 +50305,7 @@ ${context || '学生正在学习 OI 相关知识'}`;
             role: 'user',
             parts: [{ text: `${systemPrompt}\n\n用户问题：${message}` }]
           }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: isValidation ? 50 : 2000
-          }
+          generationConfig
         }),
         signal: AbortSignal.timeout(fetchTimeout)
       });
@@ -50250,14 +50316,23 @@ ${context || '学生正在学习 OI 相关知识'}`;
       }
 
       const data = await response.json();
-      const content = data.candidates && data.candidates[0] && data.candidates[0].content &&
-                      data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
-                      data.candidates[0].content.parts[0].text;
+      const parts = data.candidates && data.candidates[0] && data.candidates[0].content &&
+                    data.candidates[0].content.parts;
+      let content = '';
+      let reasoning = '';
+      if (parts) {
+        for (const p of parts) {
+          if (!p || !p.text) continue;
+          if (p.thought) reasoning += p.text;   // 思考摘要片段
+          else content += p.text;               // 正式回答片段
+        }
+      }
+      if (!content && reasoning) content = reasoning;
       if (!content) {
         console.warn('Gemini 返回空内容:', JSON.stringify(data));
         throw new Error('Gemini 返回了空内容，请检查模型配置');
       }
-      return { success: true, message: content };
+      return { success: true, message: content, reasoning };
     };
 
     try {
@@ -50271,7 +50346,7 @@ ${context || '学生正在学习 OI 相关知识'}`;
   },
 
   // 发送到百度文心一言
-  async sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation) {
+  async sendToBaidu(message, systemPrompt, apiKey, apiUrl, model, isValidation, deepThinking = false) {
     const fetchTimeout = isValidation ? 12000 : 45000;
     const totalTimeout = fetchTimeout + 8000;  // 百度需要额外获取token，多给缓冲
     const operation = async () => {
@@ -50293,7 +50368,8 @@ ${context || '学生正在学习 OI 相关知识'}`;
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: message }
-          ]
+          ],
+          ...(deepThinking && !isValidation ? { enable_thinking: true } : {})
         }),
         signal
       });
@@ -50332,7 +50408,9 @@ ${context || '学生正在学习 OI 相关知识'}`;
     }
 
     const provider = settings.provider || 'openai';
-    return await this.sendToProvider(provider, message, context, settings.apiKey, settings.model, false);
+    // 深度思考默认开启（历史设置无此字段时视为开启）
+    const deepThinking = settings.deepThinking !== false;
+    return await this.sendToProvider(provider, message, context, settings.apiKey, settings.model, false, deepThinking);
   },
 
   // 分析用户思路（苏格拉底式引导 - 不直接给答案）
@@ -50391,13 +50469,25 @@ ${userThinking}
     }
     messages.push({ role: 'user', content: message });
 
-    // 发送多轮对话（支持OpenAI兼容格式）
-    return await this._sendMessages(messages, apiUrl, settings.apiKey, settings.model, provider, false);
+    // 发送多轮对话（支持OpenAI兼容格式），深度思考默认开启
+    const deepThinking = settings.deepThinking !== false;
+    return await this._sendMessages(messages, apiUrl, settings.apiKey, settings.model, provider, false, deepThinking);
   },
 
-  // 发送消息数组（多轮对话底层实现）
-  async _sendMessages(messages, apiUrl, apiKey, model, provider, isValidation) {
-    const fetchTimeout = isValidation ? 12000 : 45000;
+  // 发送消息数组（多轮对话底层实现，含深度思考失败自动回退）
+  async _sendMessages(messages, apiUrl, apiKey, model, provider, isValidation, deepThinking = false) {
+    let result = await this._postChatCompletions(messages, apiUrl, apiKey, model, provider, isValidation, deepThinking);
+    if (!result.success && deepThinking && !isValidation && this._shouldFallbackToPlain(result)) {
+      console.warn('深度思考请求失败，自动回退为普通模式重试:', result.message);
+      result = await this._postChatCompletions(messages, apiUrl, apiKey, model, provider, isValidation, false);
+    }
+    return result;
+  },
+
+  // 调用 Chat Completions 接口（多轮对话实际请求）
+  async _postChatCompletions(messages, apiUrl, apiKey, model, provider, isValidation, deepThinking = false) {
+    // 深度思考耗时明显更长，超时时间相应放宽
+    const fetchTimeout = isValidation ? 12000 : (deepThinking ? 120000 : 45000);
     const totalTimeout = fetchTimeout + 5000;
     const operation = async () => {
       const response = await fetch(apiUrl, {
@@ -50406,7 +50496,7 @@ ${userThinking}
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify(this._buildOpenAIBody(model, messages, provider, isValidation)),
+        body: JSON.stringify(this._buildOpenAIBody(model, messages, provider, isValidation, deepThinking)),
         signal: AbortSignal.timeout(fetchTimeout)
       });
 
@@ -50418,14 +50508,15 @@ ${userThinking}
       const data = await response.json();
       const msg = data.choices && data.choices[0] && data.choices[0].message;
       let content = msg && msg.content;
-      // DeepSeek V4 兜底：思考模式下 content 可能为空，答案在 reasoning_content
-      if (!content && msg && msg.reasoning_content) {
-        content = msg.reasoning_content;
+      const reasoning = (msg && msg.reasoning_content) || '';
+      // 思考模式兜底：content 可能为空，答案在 reasoning_content
+      if (!content && reasoning) {
+        content = reasoning;
       }
       if (!content) {
         throw new Error('AI 返回了空内容，请检查模型是否可用');
       }
-      return { success: true, message: content };
+      return { success: true, message: content, reasoning };
     };
 
     try {
@@ -50436,6 +50527,37 @@ ${userThinking}
       }
       return { success: false, message: `AI 请求失败: ${error.message}` };
     }
+  },
+
+  // 检测文本是否以英文为主（拉丁字母显著多于中文，用于识别英文题面）
+  isEnglishDominant(text) {
+    if (!text) return false;
+    const latin = (text.match(/[A-Za-z]/g) || []).length;
+    const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+    // 至少有一定篇幅的英文，且明显多于中文才判定为英文题面
+    return latin >= 200 && latin > cjk * 2;
+  },
+
+  // 将英文题面翻译为中文（保留 Markdown 与 LaTeX 结构）
+  async translateToChinese(text) {
+    const settings = Storage.getSettings();
+    if (!settings.apiKey) {
+      return { success: false, message: '请先在设置中配置 AI API 密钥后再翻译' };
+    }
+    if (!settings.model) {
+      return { success: false, message: '请先在设置中选择 AI 模型后再翻译' };
+    }
+    const prompt = `请将下面的 OI 竞赛题目题面完整翻译成简体中文。要求：
+1. 严格保留所有 Markdown 格式（标题、加粗、列表、图片、链接等）和 LaTeX 公式（$...$、$$...$$）原样不变
+2. 题目中的变量名、函数名、代码片段保持原样不翻译
+3. 使用"题目描述""输入格式""输出格式""说明/提示"等中文标准小节表述
+4. 只输出翻译结果，不要添加任何解释或前后缀
+
+原文：
+${text}`;
+    // 翻译任务不需要深度思考，直接用普通模式调用以保证速度
+    const provider = settings.provider || 'openai';
+    return await this.sendToProvider(provider, prompt, '', settings.apiKey, settings.model, false, false);
   },
 
   // 帮助debug
@@ -50543,10 +50665,13 @@ const AIAssistant = {
     input.value = '';
     messages.scrollTop = messages.scrollHeight;
 
-    // 添加加载指示器
+    // 添加加载指示器（深度思考模式给出更明确的等待提示）
+    const deepThinking = Storage.getSettings().deepThinking !== false;
     const loadingMsg = document.createElement('div');
     loadingMsg.className = 'chat-message assistant';
-    loadingMsg.innerHTML = '<div class="chat-bubble"><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>';
+    loadingMsg.innerHTML = '<div class="chat-bubble"><div class="thinking-status">' +
+      (deepThinking ? '<span class="thinking-emoji">🤔</span>正在深度思考，请稍候…' : '正在输入…') +
+      '</div><div class="typing-indicator"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div></div>';
     messages.appendChild(loadingMsg);
     messages.scrollTop = messages.scrollHeight;
 
@@ -50557,13 +50682,21 @@ const AIAssistant = {
     const aiMsg = document.createElement('div');
     aiMsg.className = 'chat-message assistant';
     if (result.success) {
-      const formatted = this.formatMarkdown(result.message);
-      aiMsg.innerHTML = '<div class="chat-bubble">' + formatted + '</div>';
+      let inner = '';
+      // 展示思维链（若服务商返回 reasoning 内容）
+      if (result.reasoning) {
+        inner += '<details class="reasoning-block"><summary>🤔 思考过程（点击展开）</summary>' +
+          '<div class="reasoning-content">' + this.escapeHtml(result.reasoning) + '</div></details>';
+      }
+      inner += '<div class="chat-bubble">' + this.formatMarkdown(result.message) + '</div>';
+      aiMsg.innerHTML = inner;
     } else {
       aiMsg.innerHTML = '<div class="chat-bubble" style="color:var(--error-color)">' + result.message + '</div>';
     }
     messages.appendChild(aiMsg);
     messages.scrollTop = messages.scrollHeight;
+    // 渲染代码高亮
+    this.highlightCode(aiMsg);
   },
 
   escapeHtml(text) {
@@ -50576,6 +50709,7 @@ const AIAssistant = {
   formatMarkdown(text) {
     if (!text) return '';
     try {
+      if (typeof marked === 'undefined' || !marked.parse) return this.simpleMarkdown(text);
       const result = marked.parse(text);
       if (result && typeof result.then === 'function') {
         // marked >=12 异步版本，用简单替换兜底
@@ -50588,6 +50722,46 @@ const AIAssistant = {
       return String(result);
     } catch(e) {
       return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    }
+  },
+
+  // 简单Markdown解析（无 marked 时的兜底，支持代码块/标题/列表等）
+  simpleMarkdown(text) {
+    if (!text) return '';
+    // 用字符码构造转义串，避免源码中出现实体字面量
+    const A = String.fromCharCode(38);
+    const esc = (s) => s.replace(/[&<>]/g, (ch) =>
+      ch === '&' ? A + 'amp;' : ch === '<' ? A + 'lt;' : A + 'gt;');
+    // 先抽出围栏代码块，避免内部被行内规则误处理
+    const codeBlocks = [];
+    let src = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (m, lang, code) => {
+      codeBlocks.push('<pre><code class="language-' + (lang || 'cpp') + '">' + esc(code.replace(/\n$/, '')) + '</code></pre>');
+      return '\u0000CODE' + (codeBlocks.length - 1) + '\u0000';
+    });
+    src = esc(src);
+    src = src
+      .replace(/^### (.*)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.*)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.*)$/gm, '<h1>$1</h1>')
+      .replace(new RegExp('^' + A + 'gt; (.*)$', 'gm'), '<blockquote>$1</blockquote>')
+      .replace(/^\s*[-*] (.*)$/gm, '<li>$1</li>')
+      .replace(/(<li>[\s\S]*?<\/li>)(\n|$)/g, (m) => '<ul>' + m.trim() + '</ul>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+      .replace(/\n/g, '<br>');
+    // 回填代码块
+    src = src.replace(/\u0000CODE(\d+)\u0000/g, (m, i) => codeBlocks[+i] || '');
+    return src;
+  },
+
+  // 对容器内的代码块做高亮（hljs 可用时）
+  highlightCode(container) {
+    if (container && typeof hljs !== 'undefined') {
+      try {
+        container.querySelectorAll('pre code:not(.hljs)').forEach((el) => hljs.highlightElement(el));
+      } catch(e) { /* 高亮失败不影响内容展示 */ }
     }
   }
 };
@@ -51797,6 +51971,12 @@ const LessonView = {
       </div>
     `;
 
+    // 渲染 LaTeX 数学公式
+    this.renderLatex(content);
+
+    // 英文题面自动翻译为中文（结果缓存，翻译一次即可）
+    this.autoTranslateProblem(problem, problemCardId);
+
     // 恢复用户思路草稿
     this.restoreThinkingDraft(module.id);
 
@@ -51858,10 +52038,19 @@ const LessonView = {
     // 更新描述（包括从占位符状态更新）
     const descSection = card.querySelector('.problem-section .fetch-notice') || 
                         card.querySelector('.problem-section .lesson-content-text');
-    if (descSection && problem.description && 
-        !problem.description.includes('加载中') && 
+    if (descSection && problem.description &&
+        !problem.description.includes('加载中') &&
         !problem.description.includes('详见洛谷')) {
-      descSection.outerHTML = '<div class="lesson-content-text">' + this.formatMarkdown(problem.description) + '</div>';
+      // 若已有翻译缓存（英文题面），直接使用译文，避免覆盖回英文
+      let descHtml = this.formatMarkdown(problem.description);
+      try {
+        const cached = localStorage.getItem('oi_translation_' + problem.id);
+        if (cached) {
+          const parts = JSON.parse(cached);
+          if (parts.description) descHtml = this.formatMarkdown(parts.description);
+        }
+      } catch(e) { /* 忽略缓存读取失败 */ }
+      descSection.outerHTML = '<div class="lesson-content-text">' + descHtml + '</div>';
     }
 
     // 更新数据范围
@@ -51869,6 +52058,79 @@ const LessonView = {
     if (constraintsSection && problem.constraints && problem.constraints !== '详见洛谷题目页面') {
       constraintsSection.textContent = problem.constraints;
     }
+  },
+
+  // 检测并自动翻译英文题面（结果缓存到本地）
+  async autoTranslateProblem(problem, cardId) {
+    if (!AI.isEnglishDominant(problem.description || '')) return;
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    const descEl = card.querySelector('.problem-section .lesson-content-text');
+    if (!descEl) return;
+
+    const cacheKey = 'oi_translation_' + problem.id;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        this.applyTranslation(cardId, JSON.parse(cached));
+        return;
+      } catch(e) { localStorage.removeItem(cacheKey); }
+    }
+
+    descEl.innerHTML = '<div class="translating-notice"><span class="loading" style="width:16px;height:16px;display:inline-block;margin-right:8px;vertical-align:middle;"></span>检测到英文题面，正在翻译成中文…</div>';
+
+    // 描述与数据范围合并为一次翻译请求，用分隔符区分
+    const SEP = '\n\n=====数据范围与提示=====\n';
+    const combined = problem.description +
+      (problem.constraints && problem.constraints !== '详见洛谷题目页面' ? SEP + problem.constraints : '');
+    const result = await AI.translateToChinese(combined);
+
+    // 翻译期间用户可能已离开该页面
+    if (!document.getElementById(cardId)) return;
+
+    if (!result.success) {
+      descEl.innerHTML = '<div class="translating-notice">翻译失败：' + this.escapeHtml(result.message) +
+        '。可稍后重试，或 <a href="https://www.luogu.com.cn/problem/' + problem.id +
+        '" target="_blank" style="color:var(--primary-color);">在洛谷查看原题</a></div>';
+      return;
+    }
+
+    let zhDesc = result.message.trim();
+    let zhConstraints = '';
+    const idx = zhDesc.indexOf('=====数据范围与提示=====');
+    if (idx >= 0) {
+      zhConstraints = zhDesc.substring(idx + '=====数据范围与提示====='.length).trim();
+      zhDesc = zhDesc.substring(0, idx).trim();
+    }
+    const parts = { description: zhDesc, constraints: zhConstraints };
+    try { localStorage.setItem(cacheKey, JSON.stringify(parts)); } catch(e) { /* 忽略缓存写入失败 */ }
+    this.applyTranslation(cardId, parts);
+  },
+
+  // 将翻译后的题面应用到题目卡片
+  applyTranslation(cardId, parts) {
+    const card = document.getElementById(cardId);
+    if (!card || !parts) return;
+    if (parts.description) {
+      const descEl = card.querySelector('.problem-section .lesson-content-text');
+      if (descEl) {
+        descEl.outerHTML = '<div class="lesson-content-text">' + this.formatMarkdown(parts.description) + '</div>';
+      }
+    }
+    if (parts.constraints) {
+      const sections = card.querySelectorAll('.problem-section');
+      const last = sections[sections.length - 1];
+      if (last) {
+        const cEl = last.querySelector('.lesson-content-text');
+        if (cEl) {
+          cEl.outerHTML = '<div class="lesson-content-text">' + this.formatMarkdown(parts.constraints) + '</div>';
+        } else {
+          last.insertAdjacentHTML('beforeend', '<div class="lesson-content-text">' + this.formatMarkdown(parts.constraints) + '</div>');
+        }
+      }
+    }
+    // 重新渲染数学公式
+    this.renderLatex(document.getElementById('lessonContent'));
   },
 
   // 保存思路草稿
@@ -52214,6 +52476,13 @@ const LessonView = {
   // 简单Markdown解析（备用）
   simpleMarkdown(text) {
     if (!text) return '';
+    // 先抽出围栏代码块，避免内部被行内规则误处理
+    const codeBlocks = [];
+    text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (m, lang, code) => {
+      codeBlocks.push('<pre><code class="language-' + (lang || 'cpp') + '">' +
+        this.escapeHtml(code.replace(/\n$/, '')) + '</code></pre>');
+      return '\u0000CODE' + (codeBlocks.length - 1) + '\u0000';
+    });
     return text
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/\n/g, '<br>')
@@ -52501,6 +52770,9 @@ const App = {
     document.getElementById('settingApiKey').value = settings.apiKey || '';
     document.getElementById('settingLuoguUser').value = settings.luoguUser || '';
 
+    // 深度思考开关（历史设置无此字段时默认开启）
+    document.getElementById('settingDeepThinking').checked = settings.deepThinking !== false;
+
     // 设置主题色
     const themeColorInput = document.getElementById('settingThemeColor');
     const themeHexSpan = document.getElementById('settingThemeHex');
@@ -52546,7 +52818,8 @@ const App = {
         model: modelSelect.value.trim(),
         luoguUser: document.getElementById('settingLuoguUser').value.trim(),
         themeColor: document.getElementById('settingThemeColor').value,
-        codeBg: document.getElementById('settingCodeBg').value
+        codeBg: document.getElementById('settingCodeBg').value,
+        deepThinking: document.getElementById('settingDeepThinking').checked
       };
 
       // 如果有API配置，验证连接
@@ -52595,7 +52868,7 @@ const App = {
       baidu: { url: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat' },
       moonshot: { url: 'https://api.moonshot.cn/v1/chat/completions' },
       yi: { url: 'https://api.lingyiwanwu.com/v1/chat/completions' },
-      minimax: { url: 'https://api.minimax.chat/v1/text/chatcompletion_pro' },
+      minimax: { url: 'https://api.minimax.chat/v1/text/chatcompletion_v2' },
       siliconflow: { url: 'https://api.siliconflow.cn/v1/chat/completions' }
     };
 
@@ -52635,68 +52908,70 @@ const App = {
 
     const providerModels = {
       openai: [
-        { value: 'gpt-4.1', label: 'GPT-4.1 (v2025-04-14)' },
-        { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini (v2025-04-14)' },
-        { value: 'gpt-4o', label: 'GPT-4o (v2024-08-06)' },
-        { value: 'gpt-4o-mini', label: 'GPT-4o Mini (v2024-07-18)' },
-        { value: 'o3-mini', label: 'o3-mini (v2025-01-31)' },
-        { value: 'o1', label: 'o1 (v2024-12-17)' }
+        { value: 'gpt-5.6-sol', label: 'GPT-5.6 Sol (旗舰)' },
+        { value: 'gpt-5.6-terra', label: 'GPT-5.6 Terra (均衡)' },
+        { value: 'gpt-5.6-luna', label: 'GPT-5.6 Luna (高性价比)' },
+        { value: 'gpt-4o', label: 'GPT-4o' },
+        { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' }
       ],
       anthropic: [
-        { value: 'claude-sonnet-4-20250514', label: 'Claude 4 Sonnet (v2025-05-14)' },
-        { value: 'claude-opus-4-20250514', label: 'Claude 4 Opus (v2025-05-14)' },
-        { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (v2024-10-22)' },
-        { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (v2024-10-22)' }
+        { value: 'claude-fable-5', label: 'Claude 5 Fable (最强)' },
+        { value: 'claude-opus-4-8', label: 'Claude Opus 4.8 (复杂编程)' },
+        { value: 'claude-sonnet-5', label: 'Claude Sonnet 5 (速度与智能均衡)' },
+        { value: 'claude-opus-4-7', label: 'Claude Opus 4.7' },
+        { value: 'claude-haiku-4-5', label: 'Claude Haiku 4 (最快)' }
       ],
       google: [
-        { value: 'gemini-2.5-pro-preview-03-25', label: 'Gemini 2.5 Pro (Preview)' },
-        { value: 'gemini-2.5-flash-preview-04-17', label: 'Gemini 2.5 Flash (Preview)' },
-        { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (v2025-02-05)' },
-        { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (v2024-05-28)' }
+        { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash (快速)' },
+        { value: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro Preview' },
+        { value: 'gemini-3-ultra', label: 'Gemini 3 Ultra (旗舰)' },
+        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }
       ],
       deepseek: [
-        { value: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash (免费·快)' },
-        { value: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro (强推理)' }
+        { value: 'deepseek-v4-pro', label: 'DeepSeek v4 Pro (强推理)' },
+        { value: 'deepseek-v4-flash', label: 'DeepSeek v4 Flash (高性价比)' },
+        { value: 'deepseek-v2', label: 'DeepSeek-V2' },
+        { value: 'deepseek-coder', label: 'DeepSeek-Coder (代码专用)' }
       ],
       zhipu: [
-        { value: 'glm-4-plus', label: 'GLM-4 Plus (v2024-11)' },
-        { value: 'glm-4-flash', label: 'GLM-4 Flash (v2024-09)' },
-        { value: 'glm-4-air', label: 'GLM-4 Air (v2024-07)' },
-        { value: 'glm-4-long', label: 'GLM-4 Long (128K)' }
+        { value: 'glm-5.2-max', label: 'GLM-5.2 (max, 旗舰)' },
+        { value: 'glm-5.2', label: 'GLM-5.2' },
+        { value: 'chatglm3-6b', label: 'ChatGLM3' }
       ],
       qwen: [
-        { value: 'qwen-max-latest', label: 'Qwen Max (Latest)' },
-        { value: 'qwen-plus-latest', label: 'Qwen Plus (Latest)' },
-        { value: 'qwen-turbo-latest', label: 'Qwen Turbo (Latest)' },
-        { value: 'qwen-coder-plus-latest', label: 'Qwen Coder Plus (Latest)' }
+        { value: 'qwen3.7-max', label: 'Qwen3.7 Max (旗舰)' },
+        { value: 'qwen3.5', label: 'Qwen3.5' },
+        { value: 'qwen2.5-72b-instruct', label: 'Qwen2.5 (72B)' },
+        { value: 'qwen2-72b-instruct', label: 'Qwen2 (72B)' }
       ],
       baidu: [
-        { value: 'ernie-4.5-8k-preview', label: '文心一言 4.5 (Preview)' },
-        { value: 'ernie-4.0-8k', label: '文心一言 4.0 (v2024-04)' },
-        { value: 'ernie-speed-128k', label: '文心一言 Speed (128K)' }
+        { value: 'ernie-4.5-8k-preview', label: '文心一言 4.5 (8K, Preview)' },
+        { value: 'ernie-4.5-turbo-128k', label: '文心 4.5 Turbo (128K)' },
+        { value: 'ernie-x1-turbo-128k', label: '文心 X1 Turbo (128K, 深度推理)' },
+        { value: 'ernie-speed-pro-128k', label: '文心 Speed Pro (128K, 免费)' },
+        { value: 'ernie-4.0-turbo-8k', label: '文心 4.0 Turbo (8K)' }
       ],
       moonshot: [
-        { value: 'kimi-latest', label: 'Kimi 3 (kimi-latest)' },
-        { value: 'kimi-2.7-code', label: 'Kimi 2.7 Code' },
-        { value: 'kimi-2.7', label: 'Kimi 2.7' },
-        { value: 'kimi-2.6', label: 'Kimi 2.6' },
-        { value: 'moonshot-v1-8k', label: 'Kimi 8K (Legacy)' }
+        { value: 'kimi-k3', label: 'Kimi K3 (旗舰, 2.8T参数)' },
+        { value: 'kimi-k2.6', label: 'Kimi K2.6' },
+        { value: 'kimi-k2-thinking', label: 'K2 Think (深度思考)' }
       ],
       yi: [
-        { value: 'yi-large', label: 'Yi Large (v2025-01)' },
-        { value: 'yi-medium', label: 'Yi Medium (v2025-01)' },
-        { value: 'yi-lightning', label: 'Yi Lightning (v2024-09)' }
+        { value: 'yi-large', label: 'Yi Large (旗舰)' },
+        { value: 'yi-medium', label: 'Yi Medium' },
+        { value: 'yi-lightning', label: 'Yi Lightning (高性价比)' }
       ],
       minimax: [
-        { value: 'MiniMax-Text-01', label: 'MiniMax Text-01 (v2025-01)' },
-        { value: 'abab6.5s-chat', label: 'MiniMax ABAB 6.5s (v2024-07)' },
-        { value: 'abab6.5-chat', label: 'MiniMax ABAB 6.5 (v2023-12)' }
+        { value: 'MiniMax-M3', label: 'Minimax-M3 (旗舰)' },
+        { value: 'MiMo-V2.5-Pro', label: 'MiMo-V2.5-Pro' }
       ],
       siliconflow: [
-        { value: 'Qwen/Qwen3-235B-A22B', label: 'Qwen3 235B (v2025-04)' },
-        { value: 'deepseek-ai/DeepSeek-R1', label: 'DeepSeek R1' },
-        { value: 'deepseek-ai/DeepSeek-V3', label: 'DeepSeek V3 (v2024-12)' },
-        { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B (v2024-09)' }
+        { value: 'deepseek-ai/DeepSeek-V3.1', label: 'DeepSeek V3.1 (235B)' },
+        { value: 'deepseek-ai/DeepSeek-R1', label: 'DeepSeek R1 (推理)' },
+        { value: 'Qwen/Qwen3-235B-A22B', label: 'Qwen3 235B (开源旗舰)' },
+        { value: 'Qwen/QwQ-32B', label: 'QwQ 32B (推理)' },
+        { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B' },
+        { value: 'zhipuai/GLM-4.6', label: 'GLM-4.6' }
       ],
       custom: []
     };

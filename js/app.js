@@ -183,6 +183,9 @@ const App = {
     document.getElementById('settingApiKey').value = settings.apiKey || '';
     document.getElementById('settingLuoguUser').value = settings.luoguUser || '';
 
+    // 深度思考开关（历史设置无此字段时默认开启）
+    document.getElementById('settingDeepThinking').checked = settings.deepThinking !== false;
+
     // 设置主题色
     const themeColorInput = document.getElementById('settingThemeColor');
     const themeHexSpan = document.getElementById('settingThemeHex');
@@ -228,7 +231,8 @@ const App = {
         model: modelSelect.value.trim(),
         luoguUser: document.getElementById('settingLuoguUser').value.trim(),
         themeColor: document.getElementById('settingThemeColor').value,
-        codeBg: document.getElementById('settingCodeBg').value
+        codeBg: document.getElementById('settingCodeBg').value,
+        deepThinking: document.getElementById('settingDeepThinking').checked
       };
 
       // 如果有API配置，验证连接
@@ -277,7 +281,7 @@ const App = {
       baidu: { url: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat' },
       moonshot: { url: 'https://api.moonshot.cn/v1/chat/completions' },
       yi: { url: 'https://api.lingyiwanwu.com/v1/chat/completions' },
-      minimax: { url: 'https://api.minimax.chat/v1/text/chatcompletion_pro' },
+      minimax: { url: 'https://api.minimax.chat/v1/text/chatcompletion_v2' },
       siliconflow: { url: 'https://api.siliconflow.cn/v1/chat/completions' }
     };
 
@@ -317,68 +321,70 @@ const App = {
 
     const providerModels = {
       openai: [
-        { value: 'gpt-4.1', label: 'GPT-4.1 (v2025-04-14)' },
-        { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini (v2025-04-14)' },
-        { value: 'gpt-4o', label: 'GPT-4o (v2024-08-06)' },
-        { value: 'gpt-4o-mini', label: 'GPT-4o Mini (v2024-07-18)' },
-        { value: 'o3-mini', label: 'o3-mini (v2025-01-31)' },
-        { value: 'o1', label: 'o1 (v2024-12-17)' }
+        { value: 'gpt-5.6-sol', label: 'GPT-5.6 Sol (旗舰)' },
+        { value: 'gpt-5.6-terra', label: 'GPT-5.6 Terra (均衡)' },
+        { value: 'gpt-5.6-luna', label: 'GPT-5.6 Luna (高性价比)' },
+        { value: 'gpt-4o', label: 'GPT-4o' },
+        { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' }
       ],
       anthropic: [
-        { value: 'claude-sonnet-4-20250514', label: 'Claude 4 Sonnet (v2025-05-14)' },
-        { value: 'claude-opus-4-20250514', label: 'Claude 4 Opus (v2025-05-14)' },
-        { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet (v2024-10-22)' },
-        { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (v2024-10-22)' }
+        { value: 'claude-fable-5', label: 'Claude 5 Fable (最强)' },
+        { value: 'claude-opus-4-8', label: 'Claude Opus 4.8 (复杂编程)' },
+        { value: 'claude-sonnet-5', label: 'Claude Sonnet 5 (速度与智能均衡)' },
+        { value: 'claude-opus-4-7', label: 'Claude Opus 4.7' },
+        { value: 'claude-haiku-4-5', label: 'Claude Haiku 4 (最快)' }
       ],
       google: [
-        { value: 'gemini-2.5-pro-preview-03-25', label: 'Gemini 2.5 Pro (Preview)' },
-        { value: 'gemini-2.5-flash-preview-04-17', label: 'Gemini 2.5 Flash (Preview)' },
-        { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (v2025-02-05)' },
-        { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro (v2024-05-28)' }
+        { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash (快速)' },
+        { value: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro Preview' },
+        { value: 'gemini-3-ultra', label: 'Gemini 3 Ultra (旗舰)' },
+        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }
       ],
       deepseek: [
-        { value: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash (免费·快)' },
-        { value: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro (强推理)' }
+        { value: 'deepseek-v4-pro', label: 'DeepSeek v4 Pro (强推理)' },
+        { value: 'deepseek-v4-flash', label: 'DeepSeek v4 Flash (高性价比)' },
+        { value: 'deepseek-v2', label: 'DeepSeek-V2' },
+        { value: 'deepseek-coder', label: 'DeepSeek-Coder (代码专用)' }
       ],
       zhipu: [
-        { value: 'glm-4-plus', label: 'GLM-4 Plus (v2024-11)' },
-        { value: 'glm-4-flash', label: 'GLM-4 Flash (v2024-09)' },
-        { value: 'glm-4-air', label: 'GLM-4 Air (v2024-07)' },
-        { value: 'glm-4-long', label: 'GLM-4 Long (128K)' }
+        { value: 'glm-5.2-max', label: 'GLM-5.2 (max, 旗舰)' },
+        { value: 'glm-5.2', label: 'GLM-5.2' },
+        { value: 'chatglm3-6b', label: 'ChatGLM3' }
       ],
       qwen: [
-        { value: 'qwen-max-latest', label: 'Qwen Max (Latest)' },
-        { value: 'qwen-plus-latest', label: 'Qwen Plus (Latest)' },
-        { value: 'qwen-turbo-latest', label: 'Qwen Turbo (Latest)' },
-        { value: 'qwen-coder-plus-latest', label: 'Qwen Coder Plus (Latest)' }
+        { value: 'qwen3.7-max', label: 'Qwen3.7 Max (旗舰)' },
+        { value: 'qwen3.5', label: 'Qwen3.5' },
+        { value: 'qwen2.5-72b-instruct', label: 'Qwen2.5 (72B)' },
+        { value: 'qwen2-72b-instruct', label: 'Qwen2 (72B)' }
       ],
       baidu: [
-        { value: 'ernie-4.5-8k-preview', label: '文心一言 4.5 (Preview)' },
-        { value: 'ernie-4.0-8k', label: '文心一言 4.0 (v2024-04)' },
-        { value: 'ernie-speed-128k', label: '文心一言 Speed (128K)' }
+        { value: 'ernie-4.5-8k-preview', label: '文心一言 4.5 (8K, Preview)' },
+        { value: 'ernie-4.5-turbo-128k', label: '文心 4.5 Turbo (128K)' },
+        { value: 'ernie-x1-turbo-128k', label: '文心 X1 Turbo (128K, 深度推理)' },
+        { value: 'ernie-speed-pro-128k', label: '文心 Speed Pro (128K, 免费)' },
+        { value: 'ernie-4.0-turbo-8k', label: '文心 4.0 Turbo (8K)' }
       ],
       moonshot: [
-        { value: 'kimi-latest', label: 'Kimi 3 (kimi-latest)' },
-        { value: 'kimi-2.7-code', label: 'Kimi 2.7 Code' },
-        { value: 'kimi-2.7', label: 'Kimi 2.7' },
-        { value: 'kimi-2.6', label: 'Kimi 2.6' },
-        { value: 'moonshot-v1-8k', label: 'Kimi 8K (Legacy)' }
+        { value: 'kimi-k3', label: 'Kimi K3 (旗舰, 2.8T参数)' },
+        { value: 'kimi-k2.6', label: 'Kimi K2.6' },
+        { value: 'kimi-k2-thinking', label: 'K2 Think (深度思考)' }
       ],
       yi: [
-        { value: 'yi-large', label: 'Yi Large (v2025-01)' },
-        { value: 'yi-medium', label: 'Yi Medium (v2025-01)' },
-        { value: 'yi-lightning', label: 'Yi Lightning (v2024-09)' }
+        { value: 'yi-large', label: 'Yi Large (旗舰)' },
+        { value: 'yi-medium', label: 'Yi Medium' },
+        { value: 'yi-lightning', label: 'Yi Lightning (高性价比)' }
       ],
       minimax: [
-        { value: 'MiniMax-Text-01', label: 'MiniMax Text-01 (v2025-01)' },
-        { value: 'abab6.5s-chat', label: 'MiniMax ABAB 6.5s (v2024-07)' },
-        { value: 'abab6.5-chat', label: 'MiniMax ABAB 6.5 (v2023-12)' }
+        { value: 'MiniMax-M3', label: 'Minimax-M3 (旗舰)' },
+        { value: 'MiMo-V2.5-Pro', label: 'MiMo-V2.5-Pro' }
       ],
       siliconflow: [
-        { value: 'Qwen/Qwen3-235B-A22B', label: 'Qwen3 235B (v2025-04)' },
-        { value: 'deepseek-ai/DeepSeek-R1', label: 'DeepSeek R1' },
-        { value: 'deepseek-ai/DeepSeek-V3', label: 'DeepSeek V3 (v2024-12)' },
-        { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B (v2024-09)' }
+        { value: 'deepseek-ai/DeepSeek-V3.1', label: 'DeepSeek V3.1 (235B)' },
+        { value: 'deepseek-ai/DeepSeek-R1', label: 'DeepSeek R1 (推理)' },
+        { value: 'Qwen/Qwen3-235B-A22B', label: 'Qwen3 235B (开源旗舰)' },
+        { value: 'Qwen/QwQ-32B', label: 'QwQ 32B (推理)' },
+        { value: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen 2.5 72B' },
+        { value: 'zhipuai/GLM-4.6', label: 'GLM-4.6' }
       ],
       custom: []
     };
