@@ -123,6 +123,33 @@ const App = {
       });
     }
 
+    // 弹窗关闭：事件委托绑定在 init 时（不依赖 showSettings 是否执行成功）
+    document.querySelectorAll('.modal').forEach(modal => {
+      // 点击 × 按钮关闭
+      const closeBtn = modal.querySelector('.modal-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          modal.classList.remove('active');
+        });
+      }
+      // 点击遮罩区域关闭（点到弹窗本体不关闭）
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
+
+    // ESC 键关闭最上层的已打开弹窗
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const activeModal = document.querySelector('.modal.active');
+        if (activeModal) {
+          activeModal.classList.remove('active');
+        }
+      }
+    });
+
     // 统计按钮
     const btnStats = document.getElementById('btnStats');
     if (btnStats) {
@@ -158,8 +185,17 @@ const App = {
     const modal = document.getElementById('settingsModal');
     modal.classList.add('active');
 
-    // 加载当前设置
-    const settings = Storage.getSettings();
+    // 关闭按钮（提前绑定，保证即使下方加载出错也能关闭弹窗）
+    const closeBtn = modal.querySelector('.modal-close');
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        modal.classList.remove('active');
+      };
+    }
+
+    // 加载当前设置（容错：即使数据异常也不影响弹窗交互）
+    try {
+    const settings = Storage.getSettings() || {};
     const providerSelect = document.getElementById('settingProvider');
     const modelSelect = document.getElementById('settingModel');
     const aiNameInput = document.getElementById('settingAiName');
@@ -261,12 +297,9 @@ const App = {
       modal.classList.remove('active');
       LessonView.showToast('设置已保存', 'success');
     };
-
-    // 关闭按钮
-    const closeBtn = modal.querySelector('.modal-close');
-    closeBtn.onclick = () => {
-      modal.classList.remove('active');
-    };
+    } catch (err) {
+      console.error('加载设置时出错:', err);
+    }
   },
 
   // 验证API连接
