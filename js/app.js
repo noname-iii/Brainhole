@@ -193,11 +193,17 @@ const App = {
       };
     }
 
+    const providerSelect = document.getElementById('settingProvider');
+    const modelSelect = document.getElementById('settingModel');
+
+    // 服务商切换事件（提前绑定，保证即使下方加载出错也能正常刷新模型列表）
+    providerSelect.onchange = () => {
+      this.updateModelList(providerSelect.value);
+    };
+
     // 加载当前设置（容错：即使数据异常也不影响弹窗交互）
     try {
     const settings = Storage.getSettings() || {};
-    const providerSelect = document.getElementById('settingProvider');
-    const modelSelect = document.getElementById('settingModel');
     const aiNameInput = document.getElementById('settingAiName');
 
     // 设置AI昵称
@@ -209,11 +215,9 @@ const App = {
     // 填充模型列表
     this.updateModelList(providerSelect.value);
 
-    // 设置已保存的模型
+    // 设置已保存的模型（updateModelList 为同步填充，直接赋值即可）
     if (settings.model) {
-      setTimeout(() => {
-        modelSelect.value = settings.model;
-      }, 0);
+      modelSelect.value = settings.model;
     }
 
     document.getElementById('settingApiKey').value = settings.apiKey || '';
@@ -250,11 +254,6 @@ const App = {
       codeBgInput.value = '#282c34';
       codeBgHexSpan.textContent = '#282c34';
       this.applyCodeTheme('#282c34');
-    };
-
-    // 服务商切换事件
-    providerSelect.onchange = () => {
-      this.updateModelList(providerSelect.value);
     };
 
     // 保存按钮
