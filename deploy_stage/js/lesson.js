@@ -58,27 +58,6 @@ const LessonView = {
         ${this.createCodeBlock(lessonData.code, 'cpp')}
       </div>` : '';
 
-    const tricksCard = (lessonData.tricks && lessonData.tricks.length > 0) ? `
-      <div class="lesson-card">
-        <h3>E. 解题大招</h3>
-        <div class="tricks-container">
-          ${lessonData.tricks.map((trick, i) => `
-            <div class="trick-item">
-              <div class="trick-header">
-                <span class="trick-number">大招 ${i + 1}</span>
-                <span class="trick-name">${this.escapeHtml(trick.name)}</span>
-              </div>
-              <div class="trick-motto">"${this.escapeHtml(trick.motto)}"</div>
-              <div class="trick-desc">${this.escapeHtml(trick.description)}</div>
-              <div class="trick-meta">
-                <div class="trick-when"><strong>适用场景：</strong>${this.escapeHtml(trick.when_to_use)}</div>
-                <div class="trick-example"><strong>典型题目：</strong>${this.escapeHtml(trick.example)}</div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>` : '';
-
     content.innerHTML = `
       <div class="lesson-card">
         <h3>A. 这个知识点解决什么问题</h3>
@@ -96,7 +75,6 @@ const LessonView = {
       </div>
 
       ${codeCard}
-      ${tricksCard}
 
       <div class="lesson-card">
         <h3>完成学习</h3>
@@ -172,6 +150,12 @@ const LessonView = {
           <div class="lesson-content-text">${this.formatMarkdown(problem.constraints)}</div>
         </div>
         ` : ''}
+
+        <div style="margin-top:12px;text-align:right;">
+          <a href="https://www.luogu.com.cn/problem/${module.luoguId}" target="_blank" class="btn-link" style="color:var(--primary-color);font-size:13px;">
+            在洛谷查看原题
+          </a>
+        </div>
       </div>
 
       <div class="thinking-area">
