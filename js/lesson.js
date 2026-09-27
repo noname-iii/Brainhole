@@ -58,6 +58,13 @@ const LessonView = {
         ${this.createCodeBlock(lessonData.code, 'cpp')}
       </div>` : '';
 
+    const examTypesText = (typeof EXAM_TYPES !== 'undefined') ? EXAM_TYPES[this.currentChapter.id] : null;
+    const examTypesCard = examTypesText ? `
+      <div class="lesson-card">
+        <h3>🎯 常考题型与解法</h3>
+        <div class="lesson-content-text">${this.formatMarkdown(examTypesText)}</div>
+      </div>` : '';
+
     const tricksCard = (lessonData.tricks && lessonData.tricks.length > 0) ? `
       <div class="lesson-card">
         <h3>E. 解题大招</h3>
@@ -96,6 +103,7 @@ const LessonView = {
       </div>
 
       ${codeCard}
+      ${examTypesCard}
       ${tricksCard}
 
       <div class="lesson-card">
@@ -124,9 +132,12 @@ const LessonView = {
       </div>
     `;
 
+    if (module.q) return this.renderSelfAuthored(module, content);  // 自编题（离线题库）
+
     const problem = await Luogu.getProblem(module.luoguId);
+    this.currentProblem = problem;  // 保存 problem 对象供 addToNotebook 使用
     const diffLabel = this.getDifficultyLabel(problem.difficulty);
-    
+
     const problemCardId = 'problemCard_' + module.id;
 
     // 直接显示本地缓存数据，不尝试网络加载
@@ -183,6 +194,7 @@ const LessonView = {
         <div class="thinking-actions">
           <button class="btn-primary" onclick="LessonView.analyzeThinking()">分析思路</button>
           <button class="btn-secondary" onclick="Luogu.submitCode('${problem.id}', '')">去洛谷提交</button>
+          <button class="btn-secondary" onclick="LessonView.addToNotebook('${module.id}', '${module.luoguId}')">☆ 加入习题册</button>
         </div>
       </div>
 
@@ -202,31 +214,90 @@ const LessonView = {
 
     // 英文题面自动翻译为中文（结果缓存，翻译一次即可）
     this.autoTranslateProblem(problem, problemCardId);
+  },
 
-    // 恢复用户思路草稿
+  // 自编题渲染（不依赖洛谷；含答案折叠与完成按钮）
+  async renderSelfAuthored(module, content) {
+    const diffNames = { 1: '基础-', 2: '基础', 3: '基础+', 4: '拔高-', 5: '拔高', 6: '高考', 7: '高考+', 8: '竞赛-', 9: '竞赛' };
+    const d = Math.max(1, Math.min(9, module.d || 5));
+    content.innerHTML = `
+      <div class="problem-card" id="problemCard_${module.id}">
+        <div class="problem-header">
+          <div class="problem-title">${module.title}</div>
+          <div class="problem-meta">
+            <span class="problem-difficulty difficulty-${d}" title="难度等级">${diffNames[d]}</span>
+            <span class="problem-id">自编 · 离线题库</span>
+          </div>
+        </div>
+        <div class="problem-section">
+          <h4>题目描述</h4>
+          <div class="lesson-content-text">${this.formatMarkdown(module.q)}</div>
+        </div>
+      </div>
+      <div class="thinking-area">
+        <h4>你的思路</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 12px;">
+          在动笔前先写下你的想法：用什么算法？状态怎么设？复杂度多少？
+        </p>
+        <textarea class="thinking-textarea" id="thinkingInput" placeholder="写下你的思路..."></textarea>
+        <div class="thinking-actions">
+          <button class="btn-primary" onclick="LessonView.showSelfAnswer('${module.id}')">显示答案与详解</button>
+        </div>
+        <div id="selfAnswer_${module.id}" style="display:none; margin-top:12px;">
+          <div class="lesson-card">
+            <h3>参考答案</h3>
+            <div class="lesson-content-text">${this.formatMarkdown(module.answer)}</div>
+          </div>
+          <div class="lesson-card">
+            <h3>完整详解</h3>
+            <div class="lesson-content-text">${this.formatMarkdown(module.solution)}</div>
+          </div>
+          <div class="lesson-card">
+            <h3>完成关卡</h3>
+            <p>对照详解核对自己的答案，做对了就完成这一关！</p>
+            <button class="btn-ac" id="btnAC" onclick="LessonView.markSelfDone('${module.id}')">
+              <span>我完成了！</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="aiResponseArea"></div>
+    `;
+    this.renderLatex(content);
     this.restoreThinkingDraft(module.id);
-
-    // 恢复AI分析回复
     this.restoreAiResponse(module.id);
-
-    // 渲染 LaTeX 数学公式
     this.renderLatex(content);
   },
 
+  showSelfAnswer(id) {
+    const el = document.getElementById('selfAnswer_' + id);
+    if (el) { el.style.display = 'block'; this.renderLatex(el); }
+  },
+
+  markSelfDone(moduleId) {
+    Storage.completeModule(moduleId);
+    const btn = document.getElementById('btnAC');
+    if (btn) { btn.classList.add('completed'); btn.innerHTML = '<span>已完成！</span>'; btn.disabled = true; }
+    this.showToast('恭喜你完成了一道题！继续加油！', 'success');
+    setTimeout(() => { this.back(); }, 1500);
+  },
+
   // 获取难度标签（与洛谷官方一致的颜色标签系统）
-  // 洛谷难度：1=入门(灰), 2=普及-(红), 3=普及(橙), 4=普及+(黄), 5=提高-(绿), 6=提高(蓝), 7=省选/NOI(紫)
+  // 洛谷九级难度：0=暂无评定(灰) 1=入门(红) 2=普及-(橙) 3=普及(黄) 4=普及+/提高-(绿)
+  //               5=提高(青) 6=提高+/省选-(蓝) 7=省选/NOI-(紫) 8=NOI/NOI+/CTS(黑)
   getDifficultyLabel(diff) {
     const labels = {
-      0: '未评定',
+      0: '暂无评定',
       1: '入门',
       2: '普及-',
       3: '普及',
-      4: '普及+',
-      5: '提高-',
-      6: '提高',
-      7: '省选'
+      4: '普及+/提高-',
+      5: '提高',
+      6: '提高+/省选-',
+      7: '省选/NOI-',
+      8: 'NOI/NOI+/CTS'
     };
-    return labels[diff] || '未知';
+    return labels[diff] || '暂无评定';
   },
 
   // 重试加载题目
@@ -384,7 +455,9 @@ const LessonView = {
       </div>
     `;
 
-    const problem = await Luogu.getProblem(this.currentModule.luoguId);
+    const problem = this.currentModule.luoguId
+      ? await Luogu.getProblem(this.currentModule.luoguId)
+      : { title: this.currentModule.title, description: this.currentModule.q || '' };
     const context = `${this.currentChapter.title} - ${problem.title}\n${problem.description}`;
 
     // 初始化对话历史
@@ -495,7 +568,9 @@ const LessonView = {
     // 立即清空输入框（问题已显示在上方）
     document.getElementById('followupInput').value = '';
 
-    const problem = await Luogu.getProblem(this.currentModule.luoguId);
+    const problem = this.currentModule.luoguId
+      ? await Luogu.getProblem(this.currentModule.luoguId)
+      : { title: this.currentModule.title, description: this.currentModule.q || '' };
     const context = `${this.currentChapter.title} - ${problem.title}\n${problem.description}`;
 
     // 追加用户问题到对话历史
@@ -610,8 +685,58 @@ const LessonView = {
 
     // 使用自定义toast替代alert
     this.showToast('恭喜你完成了一道题！继续加油！', 'success');
-    
+
     setTimeout(() => { this.back(); }, 1500);
+  },
+
+  // 将当前题目加入习题册
+  addToNotebook(moduleId, luoguId) {
+    if (!this.currentModule || !this.currentChapter) {
+      this.showToast('无法获取题目信息', 'error');
+      return;
+    }
+
+    const module = this.currentModule;
+    const chapter = this.currentChapter;
+    const problem = this.currentProblem;
+
+    if (!problem) {
+      this.showToast('题目数据未加载', 'error');
+      return;
+    }
+
+    // 构建题目内容
+    let content = `# ${problem.title}\n\n`;
+    content += `**题目链接：** [洛谷 ${luoguId}](https://www.luogu.com.cn/problem/${luoguId})\n\n`;
+
+    if (problem.description) {
+      content += `## 题目描述\n${problem.description}\n\n`;
+    }
+
+    if (problem.samples && problem.samples.length > 0) {
+      content += `## 样例\n`;
+      problem.samples.forEach((sample, i) => {
+        content += `### 样例 ${i + 1}\n`;
+        content += `**输入：**\n\`\`\`\n${sample.input}\n\`\`\`\n\n`;
+        content += `**输出：**\n\`\`\`\n${sample.output}\n\`\`\`\n\n`;
+      });
+    }
+
+    if (problem.constraints) {
+      content += `## 数据范围\n${problem.constraints}\n`;
+    }
+
+    // 调用 NotebookView.addOI 方法
+    if (typeof NotebookView !== 'undefined' && NotebookView.addOI) {
+      const success = NotebookView.addOI(module, chapter, problem);
+      if (success) {
+        this.showToast('已加入习题册', 'success');
+      } else {
+        this.showToast('题目已在习题册中', 'info');
+      }
+    } else {
+      this.showToast('习题册功能未加载', 'error');
+    }
   },
 
   // 自定义Toast提示
