@@ -167,6 +167,33 @@
       }
     },
 
+    // 在习题册内导航到上一题/下一题（不经过 back，直接切换）
+    navigateOI(notebookItemId) {
+      const items = this._load();
+      const item = items.find(x => x.id === notebookItemId);
+      if (!item || item.subject !== 'oi') return;
+
+      if (typeof CHAPTERS === 'undefined' || typeof LessonView === 'undefined') return;
+      for (const ch of CHAPTERS) {
+        const mod = ch.modules.find(m => m.id === item.kpId);
+        if (mod) {
+          LessonView._notebookCtx = {
+            itemId: notebookItemId,
+            subject: 'oi'
+          };
+          // 直接打开新题目，不经过 back()
+          LessonView.currentModule = mod;
+          LessonView.currentChapter = ch;
+          document.getElementById('lessonTitle').textContent = ch.title + ' - ' + mod.title;
+          const btnBack = document.getElementById('btnBack');
+          if (btnBack) btnBack.textContent = '← 返回「' + ch.title + '」';
+          LessonView.renderProblem(mod);
+          return;
+        }
+      }
+      LessonView.showToast('未找到原始题目，可能章节已变更', 'error');
+    },
+
     // ============ 渲染 ============
     show() {
       this._switchView('notebookView');

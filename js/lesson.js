@@ -147,10 +147,10 @@ const LessonView = {
       const adj = NotebookView.getAdjacent(nbCtx.itemId);
       const counter = `<span style="color:var(--text-secondary);font-size:13px;margin:0 8px;">${adj.index + 1} / ${adj.total}</span>`;
       const prevBtn = adj.prev
-        ? `<button class="btn-secondary" onclick="LessonView._notebookCtx={itemId:'${adj.prev.id}',subject:'oi'};LessonView.back();NotebookView.openOI('${adj.prev.id}');">← 上一题</button>`
+        ? `<button class="btn-secondary" onclick="NotebookView.navigateOI('${adj.prev.id}');">← 上一题</button>`
         : `<button class="btn-secondary" disabled style="opacity:0.4;cursor:not-allowed;">← 上一题</button>`;
       const nextBtn = adj.next
-        ? `<button class="btn-secondary" onclick="LessonView._notebookCtx={itemId:'${adj.next.id}',subject:'oi'};LessonView.back();NotebookView.openOI('${adj.next.id}');">下一题 →</button>`
+        ? `<button class="btn-secondary" onclick="NotebookView.navigateOI('${adj.next.id}');">下一题 →</button>`
         : `<button class="btn-secondary" disabled style="opacity:0.4;cursor:not-allowed;">下一题 →</button>`;
       navHtml = `<div class="nb-nav-bar" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0;margin-bottom:8px;">
         ${prevBtn}${counter}${nextBtn}
