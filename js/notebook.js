@@ -119,6 +119,54 @@
 
     count() { return this._load().length; },
 
+    // 获取当前过滤列表（供导航使用）
+    _getFilteredList() {
+      const items = this._load();
+      return this.currentFilter === 'all' ? items :
+        items.filter(it => it.subject === this.currentFilter);
+    },
+
+    // 获取某题在过滤列表中的前后题
+    getAdjacent(currentId) {
+      const list = this._getFilteredList();
+      const idx = list.findIndex(it => it.id === currentId);
+      if (idx < 0) return { prev: null, next: null };
+      return {
+        prev: idx > 0 ? list[idx - 1] : null,
+        next: idx < list.length - 1 ? list[idx + 1] : null,
+        index: idx,
+        total: list.length
+      };
+    },
+
+    // 从习题册打开一道 OI 题（找到原始模块并跳转）
+    openOI(notebookItemId) {
+      const items = this._load();
+      const item = items.find(x => x.id === notebookItemId);
+      if (!item || item.subject !== 'oi') return;
+
+      // 在 CHAPTERS 中查找对应模块
+      if (typeof CHAPTERS === 'undefined') return;
+      for (const ch of CHAPTERS) {
+        const mod = ch.modules.find(m => m.id === item.kpId);
+        if (mod) {
+          // 标记来源为习题册，以便显示导航
+          if (typeof LessonView !== 'undefined') {
+            LessonView._notebookCtx = {
+              itemId: notebookItemId,
+              subject: 'oi'
+            };
+            LessonView.open(mod, ch);
+          }
+          return;
+        }
+      }
+      // 找不到模块时降级提示
+      if (typeof LessonView !== 'undefined') {
+        LessonView.showToast('未找到原始题目，可能章节已变更', 'error');
+      }
+    },
+
     // ============ 渲染 ============
     show() {
       this._switchView('notebookView');

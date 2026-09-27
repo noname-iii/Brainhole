@@ -140,8 +140,27 @@ const LessonView = {
 
     const problemCardId = 'problemCard_' + module.id;
 
+    // 检查是否从习题册打开，生成导航按钮
+    const nbCtx = this._notebookCtx;
+    let navHtml = '';
+    if (nbCtx && nbCtx.subject === 'oi' && typeof NotebookView !== 'undefined') {
+      const adj = NotebookView.getAdjacent(nbCtx.itemId);
+      const counter = `<span style="color:var(--text-secondary);font-size:13px;margin:0 8px;">${adj.index + 1} / ${adj.total}</span>`;
+      const prevBtn = adj.prev
+        ? `<button class="btn-secondary" onclick="LessonView._notebookCtx={itemId:'${adj.prev.id}',subject:'oi'};LessonView.back();NotebookView.openOI('${adj.prev.id}');">← 上一题</button>`
+        : `<button class="btn-secondary" disabled style="opacity:0.4;cursor:not-allowed;">← 上一题</button>`;
+      const nextBtn = adj.next
+        ? `<button class="btn-secondary" onclick="LessonView._notebookCtx={itemId:'${adj.next.id}',subject:'oi'};LessonView.back();NotebookView.openOI('${adj.next.id}');">下一题 →</button>`
+        : `<button class="btn-secondary" disabled style="opacity:0.4;cursor:not-allowed;">下一题 →</button>`;
+      navHtml = `<div class="nb-nav-bar" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0;margin-bottom:8px;">
+        ${prevBtn}${counter}${nextBtn}
+        <button class="btn-secondary" onclick="LessonView._notebookCtx=null;NotebookView.show();" style="margin-left:12px;">返回习题册</button>
+      </div>`;
+    }
+
     // 直接显示本地缓存数据，不尝试网络加载
     content.innerHTML = `
+      ${navHtml}
       <div class="problem-card" id="${problemCardId}">
         <div class="problem-header">
           <div class="problem-title">${problem.title}</div>
